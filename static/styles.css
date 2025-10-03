@@ -1,0 +1,211 @@
+/* styles.css */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+
+h2 {
+  color: #333;
+  text-align: center;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filters input, .filters select {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.filters button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.filters button:hover {
+  background-color: #0056b3;
+}
+
+.filters button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.results-header {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.active-filters span {
+  display: inline-block;
+  margin: 5px 10px 5px 0;
+  padding: 4px 8px;
+  background: #e9ecef;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.part-card {
+  background: white;
+  padding: 15px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.part-header {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.part-header h3 {
+  margin: 0;
+  color: #007bff;
+  flex-grow: 1;
+}
+
+.catalog-badge {
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.catalog-badge.dayton { background: #dc3545; color: white; }
+.catalog-badge.fort_pro { background: #28a745; color: white; }
+.catalog-badge.caterpillar { background: #ffc107; color: black; }
+
+.part-details p {
+  margin: 5px 0;
+  font-size: 0.9em;
+}
+
+.part-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-view-image, .btn-view-pdf {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 3px;
+  text-decoration: none;
+  font-size: 0.8em;
+  cursor: pointer;
+  text-align: center;
+  flex: 1;
+}
+
+.btn-view-image {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-view-pdf {
+  background: #6f42c1;
+  color: white;
+}
+
+.btn-view-image:hover {
+  background: #138496;
+}
+
+.btn-view-pdf:hover {
+  background: #5a359c;
+}
+
+/* Popup styles */
+.popup {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.popup-content {
+  background: white;
+  padding: 20px;
+  border-radius: 4px;
+  max-width: 90%;
+  max-height: 90%;
+  position: relative;
+}
+
+#popup-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #333;
+}
+
+#popup-image {
+  max-width: 100%;
+  max-height: 70vh;
+  display: block;
+  margin: 0 auto;
+}
+
+#pdf-btn {
+  display: block;
+  margin: 15px auto 0;
+  padding: 10px 20px;
+  background: #6f42c1;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  text-align: center;
+  width: 150px;
+}
+
+#pdf-btn:hover {
+  background: #5a359c;
+}
+
+.error {
+  color: #dc3545;
+  padding: 10px;
+  background: #f8d7da;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .results-grid {
+    grid-template-columns: 1fr;
+  }
+}

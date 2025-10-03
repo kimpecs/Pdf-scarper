@@ -4,34 +4,35 @@ from pathlib import Path
 
 DB_PATH = Path("catalog.db")
 
+
 def setup_database():
     if DB_PATH.exists():
-        DB_PATH.unlink()  # delete existing database
+        DB_PATH.unlink()
         print("Deleted existing catalog.db")
 
-    # Recreate tables
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    
-    # Create main parts table with catalog_type column
+
+    # --- Parts Table ---
     cur.execute("""
     CREATE TABLE parts (
         id INTEGER PRIMARY KEY,
-        catalog_type TEXT,  -- 'dayton' or 'fort_pro'
-        part_type TEXT,     -- 'part', 'caliper', 'kit'
-        part_number TEXT,
+        catalog_type TEXT CHECK(catalog_type IN ('dayton', 'fort_pro', 'caterpillar')),
+        part_type TEXT CHECK(part_type IN ('part', 'caliper', 'kit', 'other')),
+        part_number TEXT NOT NULL,
         description TEXT,
         category TEXT,
         page INTEGER,
         image_path TEXT,
         page_text TEXT,
+        pdf_path TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
-    
-    # Create FTS table for full-text search
+
+    # --- Full Text Search Table ---
     cur.execute("""
-    CREATE VIRTUAL TABLE IF NOT EXISTS parts_fts USING fts5(
+    CREATE VIRTUAL TABLE parts_fts USING fts5(
         catalog_type,
         part_number,
         description,
@@ -41,23 +42,19 @@ def setup_database():
     );
     """)
 
-    # Add triggers for automatic FTS synchronization
-    cur.execute("""
-    CREATE TRIGGER IF NOT EXISTS parts_ai AFTER INSERT ON parts BEGIN
+    # --- FTS Triggers ---
+    cur.executescript("""
+    CREATE TRIGGER parts_ai AFTER INSERT ON parts BEGIN
         INSERT INTO parts_fts(rowid, catalog_type, part_number, description, page_text)
         VALUES (new.id, new.catalog_type, new.part_number, new.description, new.page_text);
     END;
-    """)
 
-    cur.execute("""
-    CREATE TRIGGER IF NOT EXISTS parts_ad AFTER DELETE ON parts BEGIN
+    CREATE TRIGGER parts_ad AFTER DELETE ON parts BEGIN
         INSERT INTO parts_fts(parts_fts, rowid, catalog_type, part_number, description, page_text)
         VALUES ('delete', old.id, old.catalog_type, old.part_number, old.description, old.page_text);
     END;
-    """)
 
-    cur.execute("""
-    CREATE TRIGGER IF NOT EXISTS parts_au AFTER UPDATE ON parts BEGIN
+    CREATE TRIGGER parts_au AFTER UPDATE ON parts BEGIN
         INSERT INTO parts_fts(parts_fts, rowid, catalog_type, part_number, description, page_text)
         VALUES ('delete', old.id, old.catalog_type, old.part_number, old.description, old.page_text);
         INSERT INTO parts_fts(rowid, catalog_type, part_number, description, page_text)
@@ -65,14 +62,16 @@ def setup_database():
     END;
     """)
 
-    # Create indexes for better performance
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_part_number ON parts(part_number)")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_catalog_type ON parts(catalog_type)")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_page ON parts(page)")
-
+    # --- Indexes ---
+    cur.executescript("""
+    CREATE INDEX idx_part_number ON parts(part_number);
+    CREATE INDEX idx_catalog_type ON parts(catalog_type);
+    CREATE INDEX idx_page ON parts(page);
+    """)
     conn.commit()
     conn.close()
-    print("Recreated catalog.db with enhanced parts table and FTS triggers")
+    print("Recreated catalog.db with pdf_path support and FTS triggers")
+
 
 if __name__ == "__main__":
     setup_database()
