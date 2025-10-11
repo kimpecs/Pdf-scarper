@@ -1,0 +1,26 @@
+# Virtual environment
+venv/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local database
+*.db
+*.sqlite3
+
+# Generated images and PDFs
+page_images/
+pdfs/
+
+# Environment variables
+.env
+
+# Distribution folders
+dist/
+build/
+
+# Egg info
+*.egg-info
