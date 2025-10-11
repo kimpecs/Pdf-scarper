@@ -1,5 +1,5 @@
-```markdown
-# PDF Parts Catalog Scraper & Search API
+
+## PDF Parts Catalog Scraper & Search API
 
 A complete system for extracting, organizing, and searching hydraulic brake parts from PDF catalogs with a web-based interface.
 
@@ -32,9 +32,6 @@ TESTING/
 └── venv/                  # Python virtual environment (not tracked)
 ```
 
-Here's the updated section with the direct Poppler download link:
-
-```markdown
 ## 🚀 Quick Start
 
 ### 1. Installation
