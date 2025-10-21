@@ -62,7 +62,30 @@ def test_all_endpoints():
                 
         except Exception as e:
             print(f"❌ {endpoint} - Error: {e}")
+            
+def test_dayton_part_detection():
+    sample_text = "D50 brake assembly with 600-123 caliper and CH5678 kit"
+    parts_found = extract_part_info(sample_text, 1, 'dayton')
+    assert len(parts_found) == 3
+    assert any(p[1] == 'D50' for p in parts_found)
+    assert any(p[1] == '600-123' for p in parts_found)
+    assert any(p[1] == 'CH5678' for p in parts_found)
+
+def test_fort_pro_kit_detection():
+    sample_text = "KIT-100 installation requires PK200 components"
+    parts_found = extract_part_info(sample_text, 1, 'fort_pro')
+    assert len(parts_found) >= 2
+    assert any('KIT-100' in p[1] for p in parts_found)
+
+def test_caterpillar_fp_detection():
+    sample_text = "FP-123456 assembly for 3406B engine arrangement"
+    parts_found = extract_part_info(sample_text, 1, 'caterpillar')
+    assert len(parts_found) >= 2
+    assert any('FP-123456' in p[1] for p in parts_found)
 
 if __name__ == "__main__":
     test_new_endpoint()
     test_all_endpoints()
+    test_dayton_part_detection()
+    test_fort_pro_kit_detection()
+    test_caterpillar_fp_detection()    
