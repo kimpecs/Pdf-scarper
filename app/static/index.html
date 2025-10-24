@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Knowledge Base - Modern</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h1><i class="fas fa-database"></i> Knowledge Base</h1>
+        <button class="sidebar-toggle" id="sidebarToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+
+      <div class="search-section">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="q" placeholder="Search parts, guides, specs..." />
+        </div>
+        
+        <div class="filter-group">
+          <label><i class="fas fa-book"></i> Catalog</label>
+          <select id="catalog_type">
+            <option value="">All Catalogs</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label><i class="fas fa-tag"></i> Category</label>
+          <select id="category">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label><i class="fas fa-cog"></i> Part Type</label>
+          <select id="part_type">
+            <option value="">All Types</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label><i class="fas fa-filter"></i> Content Type</label>
+          <select id="content_type">
+            <option value="all">Parts & Guides</option>
+            <option value="parts">Parts Only</option>
+            <option value="guides">Guides Only</option>
+          </select>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn-primary" id="searchBtn">
+            <i class="fas fa-search"></i> Search
+          </button>
+          <button class="btn-secondary" id="showAll">
+            <i class="fas fa-sync"></i> Show All
+          </button>
+          <button class="btn-outline" id="resetFilters">
+            <i class="fas fa-times"></i> Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Technical Guides Section -->
+      <div class="guides-section">
+        <h3><i class="fas fa-file-pdf"></i> Technical Guides</h3>
+        <div class="guides-list" id="guidesList">
+          <!-- Guides will be loaded here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="content-header">
+        <div class="breadcrumb">
+          <span id="breadcrumb">All Content</span>
+        </div>
+        <div class="view-controls">
+          <button class="view-btn active" data-view="grid">
+            <i class="fas fa-th"></i>
+          </button>
+          <button class="view-btn" data-view="list">
+            <i class="fas fa-list"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="results-container">
+        <div id="results"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF Viewer Modal -->
+  <div id="pdfModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="pdfTitle">Technical Guide</h3>
+        <button class="modal-close" id="pdfModalClose">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <iframe id="pdfViewer" src="" width="100%" height="600px"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Popup -->
+  <div id="imagePopup" class="popup">
+    <div class="popup-content">
+      <span id="popupClose">&times;</span>
+      <img id="popupImage" src="" alt="Part Page">
+      <div class="popup-actions">
+        <a id="pdfBtn" class="btn-pdf" target="_blank">
+          <i class="fas fa-file-pdf"></i> Open PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- App script -->
+  <script src="app.js"></script>
+</body>
+</html>

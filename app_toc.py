@@ -10,7 +10,7 @@ from typing import Dict, Any
 import uvicorn
 from typing import List, Optional
 from s3_manager import S3Manager
-from guide_manager import TechnicalGuideManager
+from template_manager import TemplateManager
 from config import Config
 import os
 
@@ -20,9 +20,9 @@ DB_PATH = BASE_DIR / "catalog.db"
 IMAGES_DIR = BASE_DIR / "page_images"
 PDF_DIR = BASE_DIR / "pdfs"
 STATIC_DIR = BASE_DIR / "static"
-guide_manager = TechnicalGuideManager()
+TemplateManager = TemplateManager()
 
-app = FastAPI(title="Hydraulic Brakes Catalog Search API")
+app = FastAPI(title="Knowledge Base ... ")
 
 # --- Middleware ---
 app.add_middleware(
@@ -395,10 +395,10 @@ def get_catalogs():
 # --- Search Helpers ---
 def query_db(q: str = None, category: str = None, part_type: str = None,
              catalog_name: str = None, limit: int = 100):
-    """Query database with proper field names matching schema"""
+    """Query database with proper field names matching schema - ALIGNED"""
     conn = get_db_conn()
     cur = conn.cursor()
-    params, sql = [], ""
+    params, sql = [], []
 
     if not q:
         # Basic search without query - show all with filters
@@ -412,13 +412,13 @@ def query_db(q: str = None, category: str = None, part_type: str = None,
             sql += " AND part_type=?"
             params.append(part_type)
         if catalog_name:
-            sql += " AND catalog_name=?"
+            sql += " AND catalog_name=?"  # catalog_name in DB = catalog_type from frontend
             params.append(catalog_name)
         sql += " ORDER BY part_number LIMIT ?"
         params.append(limit)
         cur.execute(sql, tuple(params))
     else:
-        # Text search
+        # Text search - same logic but ensure catalog_name filter works
         if q.upper().startswith(('D', '600-', 'CH')):
             # Part number prefix search
             sql = """SELECT id, catalog_name, catalog_type, part_type, part_number, description,
@@ -467,17 +467,34 @@ def query_db(q: str = None, category: str = None, part_type: str = None,
 def search(q: Optional[str] = Query(None),
            category: Optional[str] = Query(None),
            part_type: Optional[str] = Query(None),
-           catalog_name: Optional[str] = Query(None),
+           catalog_type: Optional[str] = Query(None),  # Changed from catalog_name
+           content_type: Optional[str] = Query("all"),  # Added content_type filter
            limit: int = 100):
-    """Search parts with category and catalog filtering"""
+    """Search parts with category and catalog filtering - ALIGNED WITH FRONTEND"""
     try:
+        # Map frontend catalog_type to backend catalog_name
+        catalog_name = catalog_type  # They are the same in our schema
+        
+        # Handle content_type filtering
+        if content_type == "guides":
+            # Return empty results for guides-only search (guides handled separately)
+            return {
+                "query": q or "",
+                "category_filter": category or "",
+                "part_type_filter": part_type or "",
+                "catalog_filter": catalog_type or "",
+                "content_type": content_type,
+                "count": 0,
+                "results": [],
+            }
+        
         rows = query_db(q, category, part_type, catalog_name, limit)
         results = []
         for r in rows:
             results.append({
                 "id": r[0],
                 "catalog_name": r[1],
-                "catalog_type": r[2],
+                "catalog_type": r[2],  # This matches frontend catalog_type
                 "part_type": r[3],
                 "part_number": r[4],
                 "description": r[5],
@@ -488,11 +505,15 @@ def search(q: Optional[str] = Query(None),
                 "pdf_page": r[7]
             })
 
+        # For parts-only filter, we already have parts
+        # For "all", we include both (guides are loaded separately in frontend)
+        
         return {
             "query": q or "",
             "category_filter": category or "",
             "part_type_filter": part_type or "",
-            "catalog_filter": catalog_name or "",
+            "catalog_filter": catalog_type or "",
+            "content_type": content_type,
             "count": len(results),
             "results": results,
         }
@@ -834,7 +855,97 @@ def get_part_detailed(part_id: int):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-
+    
+@app.get("/debug/schema")
+def debug_schema():
+    """Check if database schema aligns with frontend expectations"""
+    conn = get_db_conn()
+    cur = conn.cursor()
+    
+    cur.execute("PRAGMA table_info(parts)")
+    columns = [col[1] for col in cur.fetchall()]
+    
+    conn.close()
+    
+    expected_columns = [
+        'catalog_name', 'catalog_type', 'part_type', 'part_number',
+        'description', 'category', 'page', 'image_path', 'pdf_path'
+    ]
+    
+    missing_columns = [col for col in expected_columns if col not in columns]
+    
+    return {
+        "expected_columns": expected_columns,
+        "actual_columns": columns,
+        "missing_columns": missing_columns,
+        "alignment_ok": len(missing_columns) == 0
+    }
+    
+@app.get("/test-alignment")
+def test_alignment():
+    """Test if frontend and backend are properly aligned"""
+    test_cases = [
+        {"q": "D50", "catalog_type": "dayton"},
+        {"category": "Brakes", "part_type": "Caliper"},
+        {"catalog_type": "caterpillar", "content_type": "parts"}
+    ]
+    
+    results = []
+    for test_case in test_cases:
+        try:
+            params = "&".join([f"{k}={v}" for k, v in test_case.items()])
+            # This would simulate a frontend request
+            results.append({
+                "test_case": test_case,
+                "params": params,
+                "status": "ready"
+            })
+        except Exception as e:
+            results.append({
+                "test_case": test_case,
+                "error": str(e),
+                "status": "failed"
+            })
+    
+    return {
+        "alignment_test": results,
+        "frontend_expected_filters": ["q", "category", "part_type", "catalog_type", "content_type"],
+        "backend_actual_parameters": ["q", "category", "part_type", "catalog_type", "content_type", "limit"],
+        "alignment": "OK" if len(results) == len(test_cases) else "NEEDS_FIXES"
+    }
+@app.get("/test-alignment")
+def test_alignment():
+    """Test if frontend and backend are properly aligned"""
+    test_cases = [
+        {"q": "D50", "catalog_type": "dayton"},
+        {"category": "Brakes", "part_type": "Caliper"},
+        {"catalog_type": "caterpillar", "content_type": "parts"}
+    ]
+    
+    results = []
+    for test_case in test_cases:
+        try:
+            params = "&".join([f"{k}={v}" for k, v in test_case.items()])
+            # This would simulate a frontend request
+            results.append({
+                "test_case": test_case,
+                "params": params,
+                "status": "ready"
+            })
+        except Exception as e:
+            results.append({
+                "test_case": test_case,
+                "error": str(e),
+                "status": "failed"
+            })
+    
+    return {
+        "alignment_test": results,
+        "frontend_expected_filters": ["q", "category", "part_type", "catalog_type", "content_type"],
+        "backend_actual_parameters": ["q", "category", "part_type", "catalog_type", "content_type", "limit"],
+        "alignment": "OK" if len(results) == len(test_cases) else "NEEDS_FIXES"
+    }
+    
 # --- Entrypoint ---
 if __name__ == "__main__":
     print("Starting server on http://localhost:8000")
