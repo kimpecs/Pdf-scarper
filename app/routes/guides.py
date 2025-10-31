@@ -1,11 +1,19 @@
 from fastapi import APIRouter, Query, HTTPException
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
+import json
 from typing import Optional, List
 from pathlib import Path
+
+
+templates = Jinja2Templates(directory="app/templates")
 
 # Import from app modules
 from app.services.db.queries import DatabaseManager
 from app.utils.file_utils import get_pdf_url
 from app.utils.logger import setup_logging
+from app.utils.config import settings
 
 logger = setup_logging()
 router = APIRouter()
@@ -118,3 +126,92 @@ async def get_catalogs():
     except Exception as e:
         logger.error(f"Error getting catalogs: {e}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    
+@router.get("/guides/{guide_name}")
+async def get_technical_guide(request: Request, guide_name: str):
+    """Get technical guide HTML page"""
+    try:
+        conn = db_manager.get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT guide_name, display_name, description, category, template_fields
+            FROM technical_guides 
+            WHERE guide_name = ?
+        """, (guide_name,))
+        
+        guide_row = cur.fetchone()
+        if not guide_row:
+            raise HTTPException(status_code=404, detail="Guide not found")
+        
+        # Parse template fields
+        template_fields = json.loads(guide_row[4]) if guide_row[4] else {}
+        
+        # Get related parts based on guide content
+        cur.execute("""
+            SELECT DISTINCT p.id, p.part_number, p.description, p.category
+            FROM parts p
+            WHERE p.description LIKE ? OR p.category = ?
+            LIMIT ?
+        """, (f'%{guide_row[1]}%', guide_row[3], settings.MAX_RELATED_PARTS))
+        
+        related_parts = []
+        for row in cur.fetchall():
+            related_parts.append({
+                'id': row[0],
+                'part_number': row[1],
+                'description': row[2],
+                'category': row[3]
+            })
+        
+        # Get related guides
+        cur.execute("""
+            SELECT guide_name, display_name 
+            FROM technical_guides 
+            WHERE category = ? AND guide_name != ?
+            LIMIT 5
+        """, (guide_row[3], guide_name))
+        
+        related_guides = []
+        for row in cur.fetchall():
+            related_guides.append({
+                'guide_name': row[0],
+                'display_name': row[1]
+            })
+        
+        conn.close()
+        
+        return templates.TemplateResponse("technical_guide.html", {
+            "request": request,
+            "guide_title": guide_row[1],
+            "description": guide_row[2],
+            "category": guide_row[3],
+            "guide_name": guide_row[0],
+            "related_parts": related_parts,
+            "related_guides": related_guides,
+            **template_fields
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting guide: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+@router.get("/guides/{guide_name}/download")
+async def download_technical_guide(guide_name: str):
+    """Download technical guide PDF"""
+    try:
+        guide_path = Path("app/data/guides") / f"{guide_name}.pdf"
+        if not guide_path.exists():
+            raise HTTPException(status_code=404, detail="Guide PDF not found")
+        
+        return FileResponse(
+            guide_path,
+            media_type='application/pdf',
+            filename=f"{guide_name}.pdf"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error downloading guide: {e}")
+        raise HTTPException(status_code=500, detail=f"File error: {str(e)}")

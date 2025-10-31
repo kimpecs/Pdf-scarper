@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ guide_title }} - Technical Guide</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #64748b;
+            --accent-color: #f59e0b;
+            --background-color: #f8fafc;
+            --card-color: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .guide-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .guide-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .guide-title {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .guide-meta {
+            display: flex;
+            gap: 2rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .guide-description {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            line-height: 1.8;
+        }
+        
+        .guide-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+        }
+        
+        .main-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+        
+        .section {
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .spec-card {
+            background: var(--background-color);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .spec-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .spec-value {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .related-parts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .part-card {
+            background: var(--background-color);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .part-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .part-number {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .part-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .navigation-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .nav-link {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background: var(--secondary-color);
+        }
+        
+        .toc-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .toc-item a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .toc-item a:hover {
+            color: var(--primary-color);
+        }
+        
+        .back-to-search {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--secondary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .back-to-search:hover {
+            background: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="guide-container">
+        <a href="/" class="back-to-search">
+            <i class="fas fa-arrow-left"></i>
+            Back to Search
+        </a>
+        
+        <div class="guide-header">
+            <h1 class="guide-title">{{ guide_title }}</h1>
+            <div class="guide-meta">
+                <span><i class="fas fa-tag"></i> {{ category }}</span>
+                <span><i class="fas fa-calendar"></i> {{ created_date }}</span>
+                <span><i class="fas fa-file"></i> Document ID: {{ document_id }}</span>
+            </div>
+            <p class="guide-description">{{ description }}</p>
+        </div>
+        
+        <div class="guide-content">
+            <div class="main-content">
+                {% if key_specifications %}
+                <div class="section">
+                    <h2 class="section-title">Key Specifications</h2>
+                    <div class="specs-grid">
+                        {% for spec_name, spec_value in key_specifications.items() %}
+                        <div class="spec-card">
+                            <div class="spec-name">{{ spec_name }}</div>
+                            <div class="spec-value">{{ spec_value }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if sections %}
+                <div class="section">
+                    <h2 class="section-title">Document Sections</h2>
+                    {% for section in sections %}
+                    <div class="section-content" style="margin-bottom: 2rem;">
+                        <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">{{ section.title }}</h3>
+                        <p style="color: var(--text-secondary);">{{ section.content }}</p>
+                        <small style="color: var(--text-secondary);">Page: {{ section.page }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if related_parts %}
+                <div class="section">
+                    <h2 class="section-title">Related Parts</h2>
+                    <div class="related-parts">
+                        {% for part in related_parts %}
+                        <div class="part-card" onclick="window.location.href='/part/{{ part.id }}'">
+                            <div class="part-number">{{ part.part_number }}</div>
+                            <div class="part-description">{{ part.description[:100] }}{% if part.description|length > 100 %}...{% endif %}</div>
+                            <small style="color: var(--text-secondary);">{{ part.category }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="sidebar">
+                <h3 style="margin-bottom: 1rem; color: var(--primary-color);">Table of Contents</h3>
+                <div class="toc">
+                    {% if key_specifications %}
+                    <div class="toc-item">
+                        <a href="#specifications">Key Specifications</a>
+                    </div>
+                    {% endif %}
+                    {% if sections %}
+                    <div class="toc-item">
+                        <a href="#sections">Document Sections</a>
+                    </div>
+                    {% endif %}
+                    {% if related_parts %}
+                    <div class="toc-item">
+                        <a href="#related-parts">Related Parts</a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);">Related Guides</h3>
+                <div class="related-guides">
+                    {% for guide in related_guides %}
+                    <div class="toc-item">
+                        <a href="/guide/{{ guide.guide_name }}">{{ guide.display_name }}</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation-links">
+            <a href="/" class="nav-link">
+                <i class="fas fa-search"></i> Back to Search
+            </a>
+            <a href="/api/guides/{{ guide_name }}/download" class="nav-link" target="_blank">
+                <i class="fas fa-download"></i> Download PDF
+            </a>
+        </div>
+    </div>
+</body>
+</html>

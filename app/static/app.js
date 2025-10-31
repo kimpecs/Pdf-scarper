@@ -10,15 +10,41 @@ class KnowledgeBaseApp {
     };
     this.catalogData = {};
     this.lastResults = { results: [] };
-    this.init();
+    
+    // ADD CONFIG HERE - Right after other properties
+    this.config = {
+      maxDescriptionLength: 120,
+      maxApplicationsDisplay: 2,
+      searchDebounceMs: 300,
+      enableTechnicalGuides: true,
+      maxSearchResults: 50
+    };
+
+  this.init();
   }
 
-  init() {
+  async init() {
     this.bindEvents();
+    await this.loadConfig(); // ADD THIS LINE - Load config first
     this.loadInitialData();
     this.setupViewControls();
   }
 
+  // ADD THIS NEW METHOD - Right after init() method
+  async loadConfig() {
+    try {
+      const response = await fetch('/api/config');
+      if (response.ok) {
+        const config = await response.json();
+        this.config = { ...this.config, ...config };
+        console.log('Loaded frontend configuration:', this.config);
+      }
+    } catch (error) {
+      console.error('Error loading config:', error);
+
+
+    }
+  }
   bindEvents() {
     // Buttons
     document.getElementById('searchBtn')?.addEventListener('click', () => this.performSearch());
@@ -48,11 +74,12 @@ class KnowledgeBaseApp {
     });
 
     // Search input with debounce
-    let searchTimeout;
+     let searchTimeout;
     document.getElementById('q')?.addEventListener('input', (e) => {
       this.filters.q = e.target.value;
       clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => this.performSearch(), 300);
+      // Use config value instead of hardcoded 300ms
+      searchTimeout = setTimeout(() => this.performSearch(), this.config.searchDebounceMs);
     });
 
     // Modal events
@@ -189,7 +216,7 @@ class KnowledgeBaseApp {
     });
   }
 
-  async performSearch() {
+   async performSearch() {
     this.setLoadingState(true);
     
     try {
@@ -197,9 +224,10 @@ class KnowledgeBaseApp {
         Object.entries(this.filters).forEach(([key, value]) => {
             if (value) params.set(key, value);
         });
-        params.set('limit', '100');
+        // Use config value instead of hardcoded limit
+        params.set('limit', this.config.maxSearchResults.toString());
 
-        console.log('Search params:', Object.fromEntries(params)); // Debug log
+        console.log('Search params:', Object.fromEntries(params));
         
         const response = await fetch(`/search?${params}`);
         if (!response.ok) throw new Error('Search request failed');
@@ -215,8 +243,7 @@ class KnowledgeBaseApp {
     } finally {
         this.setLoadingState(false);
     }
-}
-// Add to KnowledgeBaseApp class in app.js
+  }
 
 async loadDaytonCategories() {
     try {
@@ -261,6 +288,75 @@ createResultCard(part, isGrid) {
     const imageDataAttr = part.image_url ? `data-image="${part.image_url}"` : '';
     const pdfLink = part.pdf_url ? `<a href="${part.pdf_url}" class="btn-action btn-pdf" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>` : '';
     
+    // USE CONFIG VALUES for text limits
+    const shortDescription = part.description ? 
+        (part.description.length > this.config.maxDescriptionLength ? 
+         part.description.substring(0, this.config.maxDescriptionLength) + '...' : 
+         part.description) : 
+        'No description available';
+    
+    // Technical guide button - check if enabled in config
+    const guideBtn = (this.config.enableTechnicalGuides && part.category && this.hasTechnicalGuide(part.category)) ? 
+        `<button class="btn-action btn-guide" data-category="${part.category}">
+            <i class="fas fa-book"></i> Guide
+        </button>` : '';
+
+    // USE CONFIG for applications display limit
+    const applicationsDisplay = part.applications && part.applications.length > 0 ? `
+        <div class="part-applications">
+            <strong>Applications:</strong> ${part.applications.slice(0, this.config.maxApplicationsDisplay).join(', ')}
+            ${part.applications.length > this.config.maxApplicationsDisplay ? 
+              ` and ${part.applications.length - this.config.maxApplicationsDisplay} more...` : ''}
+        </div>
+    ` : '';
+
+    return `
+        <div class="part-card ${gridClass}" data-part-id="${part.id}">
+            <div class="part-header">
+                <div class="part-number">${part.part_number}</div>
+                <div class="badge-container">
+                    <span class="catalog-badge ${part.catalog_type}">${part.catalog_type}</span>
+                    ${part.oe_numbers && part.oe_numbers.length > 0 ? 
+                        `<span class="dayton-badge oe-badge">OE: ${part.oe_numbers[0]}</span>` : ''}
+                </div>
+            </div>
+            
+            <div class="part-meta">
+                <div class="meta-item">
+                    <i class="fas fa-tag"></i>
+                    <span>${part.part_type || 'N/A'}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-folder"></i>
+                    <span>${part.category || 'N/A'}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-file"></i>
+                    <span>Page ${part.page}</span>
+                </div>
+            </div>
+
+            <div class="part-description">
+                ${shortDescription}
+            </div>
+
+            ${applicationsDisplay}
+
+            <div class="part-actions">
+                ${part.image_url ? `
+                    <button class="btn-action btn-image" ${imageDataAttr}>
+                        <i class="fas fa-image"></i> Image
+                    </button>
+                ` : ''}
+
+                ${pdfLink}
+                
+                ${guideBtn}
+            </div>
+        </div>
+    `;
+}
+
     // Dayton-specific badges
     const daytonBadges = [];
     if (part.catalog_type === 'dayton') {
@@ -362,55 +458,6 @@ createResultCard(part, isGrid) {
     });
   }
 
-  createResultCard(part, isGrid) {
-    const gridClass = isGrid ? '' : 'list-view';
-    const imageDataAttr = part.image_url ? `data-image="${part.image_url}"` : '';
-    const pdfLink = part.pdf_url ? `<a href="${part.pdf_url}" class="btn-action btn-pdf" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>` : '';
-    
-    return `
-      <div class="part-card ${gridClass}" data-part-id="${part.id}">
-        <div class="part-header">
-          <div class="part-number">${part.part_number}</div>
-          <span class="catalog-badge ${part.catalog_type}">${part.catalog_type}</span>
-        </div>
-        
-        <div class="part-meta">
-          <div class="meta-item">
-            <i class="fas fa-tag"></i>
-            <span>${part.part_type || 'N/A'}</span>
-          </div>
-          <div class="meta-item">
-            <i class="fas fa-folder"></i>
-            <span>${part.category || 'N/A'}</span>
-          </div>
-          <div class="meta-item">
-            <i class="fas fa-file"></i>
-            <span>Page ${part.page}</span>
-          </div>
-        </div>
-
-        ${part.description ? `
-          <div class="part-description">
-            ${part.description}
-          </div>
-        ` : ''}
-
-        <div class="part-actions">
-          ${part.image_url ? `
-            <button class="btn-action btn-image" ${imageDataAttr}>
-              <i class="fas fa-image"></i> Image
-            </button>
-          ` : ''}
-
-          ${pdfLink}
-          
-          <button class="btn-action btn-guide">
-            <i class="fas fa-book"></i> Guide
-          </button>
-        </div>
-      </div>
-    `;
-  }
 
   openImagePopup(card) {
     if (!card) return;
@@ -431,18 +478,193 @@ createResultCard(part, isGrid) {
     document.getElementById('imagePopup').style.display = 'none';
   }
 
-  async openTechnicalGuide(guideName) {
+ // Add to your KnowledgeBaseApp class
+
+async openTechnicalGuide(guideName) {
     try {
-      const response = await fetch(`/technical-guides/${guideName}?download=true`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        this.showPdfModal(guideName, url);
-      }
+        // Open guide in new tab/window
+        const guideUrl = `/guides/${guideName}`;
+        window.open(guideUrl, '_blank');
     } catch (error) {
-      console.error('Error opening guide:', error);
+        console.error('Error opening guide:', error);
+        this.displayError('Error opening technical guide');
     }
-  }
+}
+
+// Enhanced search to include technical guides
+async performSearch() {
+    this.setLoadingState(true);
+    
+    try {
+        const params = new URLSearchParams();
+        Object.entries(this.filters).forEach(([key, value]) => {
+            if (value) params.set(key, value);
+        });
+        params.set('limit', '50'); // Reduced limit for better performance
+
+        console.log('Search params:', Object.fromEntries(params));
+        
+        const response = await fetch(`/search?${params}`);
+        if (!response.ok) throw new Error('Search request failed');
+        
+        const data = await response.json();
+        
+        this.lastResults = data;
+        this.displayResults(data);
+        this.updateBreadcrumb();
+    } catch (error) {
+        console.error('Search error:', error);
+        this.displayError('Error performing search. Please check server connection.');
+    } finally {
+        this.setLoadingState(false);
+    }
+}
+
+// Enhanced result card with limited text
+createResultCard(part, isGrid) {
+    const gridClass = isGrid ? '' : 'list-view';
+    const imageDataAttr = part.image_url ? `data-image="${part.image_url}"` : '';
+    const pdfLink = part.pdf_url ? `<a href="${part.pdf_url}" class="btn-action btn-pdf" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>` : '';
+    
+    // Limit description text
+    const shortDescription = part.description ? 
+        (part.description.length > 120 ? part.description.substring(0, 120) + '...' : part.description) : 
+        'No description available';
+    
+    // Technical guide button for relevant items
+    const guideBtn = part.category && this.hasTechnicalGuide(part.category) ? 
+        `<button class="btn-action btn-guide" data-category="${part.category}">
+            <i class="fas fa-book"></i> Guide
+        </button>` : '';
+
+    return `
+        <div class="part-card ${gridClass}" data-part-id="${part.id}">
+            <div class="part-header">
+                <div class="part-number">${part.part_number}</div>
+                <div class="badge-container">
+                    <span class="catalog-badge ${part.catalog_type}">${part.catalog_type}</span>
+                    ${part.oe_numbers && part.oe_numbers.length > 0 ? 
+                        `<span class="dayton-badge oe-badge">OE: ${part.oe_numbers[0]}</span>` : ''}
+                </div>
+            </div>
+            
+            <div class="part-meta">
+                <div class="meta-item">
+                    <i class="fas fa-tag"></i>
+                    <span>${part.part_type || 'N/A'}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-folder"></i>
+                    <span>${part.category || 'N/A'}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-file"></i>
+                    <span>Page ${part.page}</span>
+                </div>
+            </div>
+
+            <div class="part-description">
+                ${shortDescription}
+            </div>
+
+            ${part.applications && part.applications.length > 0 ? `
+                <div class="part-applications">
+                    <strong>Applications:</strong> ${part.applications.slice(0, 2).join(', ')}
+                    ${part.applications.length > 2 ? ` and ${part.applications.length - 2} more...` : ''}
+                </div>
+            ` : ''}
+
+            <div class="part-actions">
+                ${part.image_url ? `
+                    <button class="btn-action btn-image" ${imageDataAttr}>
+                        <i class="fas fa-image"></i> Image
+                    </button>
+                ` : ''}
+
+                ${pdfLink}
+                
+                ${guideBtn}
+            </div>
+        </div>
+    `;
+}
+
+hasTechnicalGuide(category) {
+    const guideCategories = ['Engine', 'Brake System', 'Electrical', 'Hydraulic System', 'Drivetrain'];
+    return guideCategories.includes(category);
+}
+
+// Add guide button event listeners
+addGuideEventListeners() {
+    document.querySelectorAll('.btn-guide').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const category = e.target.dataset.category;
+            this.searchTechnicalGuides(category);
+        });
+    });
+}
+
+async searchTechnicalGuides(category) {
+    try {
+        const response = await fetch(`/api/guides/search?category=${category}`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.guides && data.guides.length > 0) {
+                this.openTechnicalGuide(data.guides[0].guide_name);
+            } else {
+                this.displayError('No technical guides found for this category');
+            }
+        }
+    } catch (error) {
+        console.error('Error searching guides:', error);
+    }
+}
+
+// Update displayResults to include guide listeners
+displayResults(data) {
+    const container = document.getElementById('results');
+    if (!container) return;
+
+    if (!data || !data.results || data.results.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-search fa-3x"></i>
+                <h3>No results found</h3>
+                <p>Try adjusting your search criteria</p>
+            </div>
+        `;
+        return;
+    }
+
+    const isGridView = this.currentView === 'grid';
+    container.className = isGridView ? 'results-grid' : 'results-list';
+
+    container.innerHTML = data.results.map(part => this.createResultCard(part, isGridView)).join('');
+
+    // Add event listeners
+    this.addImageEventListeners();
+    this.addGuideEventListeners();
+    this.addCardEventListeners();
+}
+
+addImageEventListeners() {
+    document.querySelectorAll('.btn-image').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const card = e.target.closest('.part-card');
+            this.openImagePopup(card);
+        });
+    });
+}
+
+addCardEventListeners() {
+    document.querySelectorAll('.part-card').forEach(card => {
+        card.addEventListener('click', () => {
+            this.showPartDetails(card.dataset.partId);
+        });
+    });
+}
 
   showPdfModal(title, pdfUrl) {
     document.getElementById('pdfTitle').textContent = title;
