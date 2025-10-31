@@ -110,10 +110,10 @@ def print_fts_status(cur):
         
         # Check FTS configuration
         cur.execute("SELECT * FROM parts_fts WHERE parts_fts MATCH 'test' LIMIT 1;")
-        print("FTS operational: ✓")
+        print("FTS operational: [OK]")
         
     except Exception as e:
-        print(f"FTS status: ✗ ({e})")
+        print(f"FTS status: [ERROR] ({e})")
 
 def print_catalog_summary(cur):
     print_header("Catalog Summary")
@@ -232,7 +232,7 @@ def check_database_health(cur):
     
     # Print results
     for check, passed in checks:
-        status = "✓" if passed else "✗"
+        status = "[OK]" if passed else "[ERROR]"
         print(f"  {status} {check}")
 
 def main():
@@ -273,10 +273,10 @@ def main():
         
         # Performance tips
         print_header("Performance Tips")
-        print("✓ Ensure indexes exist on frequently searched columns")
-        print("✓ Regular VACUUM to optimize database")
-        print("✓ Use FTS for text searches")
-        print("✓ Consider partitioning for very large datasets")
+        print("[OK] Ensure indexes exist on frequently searched columns")
+        print("[OK] Regular VACUUM to optimize database")
+        print("[OK] Use FTS for text searches")
+        print("[OK] Consider partitioning for very large datasets")
 
     except Exception as e:
         print(f"❌ Error during analysis: {e}")

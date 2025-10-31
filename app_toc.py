@@ -993,6 +993,6 @@ if __name__ == "__main__":
     print(f"Static files found:")
     for file in ["index.html", "styles.css", "app.js"]:
         path = STATIC_DIR / file
-        print(f"  {file}: {'✓' if path.exists() else '✗'}")
+        print(f"  {file}: {'[OK]' if path.exists() else '[ERROR]'}")
     
     uvicorn.run("app_toc:app", host="0.0.0.0", port=8000, reload=True)

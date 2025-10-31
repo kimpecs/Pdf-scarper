@@ -5,13 +5,11 @@ import json
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 import sys
-import os
 
 # Add the project root to Python path for absolute imports
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-# Use absolute imports
 from app.utils.logger import setup_logging
 from app.utils.constants import PART_NUMBER_PATTERNS, MACHINE_PATTERNS, CATALOG_INDICATORS
 
@@ -190,42 +188,52 @@ class CatalogExtractor:
             output_path = Path(output_dir)
             output_path.mkdir(parents=True, exist_ok=True)
             
-            for page_num in range(len(doc)):
+            success_count = 0
+            error_count = 0
+            
+            for page_num in range(min(len(doc), 100)):  # Limit to first 100 pages for performance
                 page = doc.load_page(page_num)
                 image_list = page.get_images()
                 
                 for img_index, img in enumerate(image_list):
                     try:
                         xref = img[0]
-                        pix = fitz.Pixmap(doc, xref)
                         
-                        if pix.n - pix.alpha < 4:
-                            img_data = pix.tobytes("png")
-                        else:
-                            pix1 = fitz.Pixmap(fitz.csRGB, pix)
-                            img_data = pix1.tobytes("png")
-                            pix1 = None
+                        # Use extract_image which handles more formats
+                        img_dict = doc.extract_image(xref)
+                        if not img_dict:
+                            error_count += 1
+                            continue
+                        
+                        img_data = img_dict["image"]
+                        img_ext = img_dict["ext"]
+                        
+                        # Only save PNG and JPEG images
+                        if img_ext.lower() not in ['png', 'jpg', 'jpeg']:
+                            error_count += 1
+                            continue
                         
                         # Save image
-                        img_filename = f"{pdf_name}_p{page_num+1}_img{img_index}.png"
+                        img_filename = f"{pdf_name}_p{page_num+1}_img{img_index:03d}.{img_ext}"
                         img_path = output_path / img_filename
                         
                         with open(img_path, "wb") as f:
                             f.write(img_data)
                         
-                        # Associate image with parts on this page
+                        # Associate with parts
                         for part in catalog_data:
-                            if part['page'] == page_num + 1:
+                            if part['page'] == page_num + 1 and not part.get('image_path'):
                                 part['image_path'] = str(img_path)
                                 break
                         
-                        pix = None
+                        success_count += 1
                         
                     except Exception as e:
-                        logger.warning(f"Error extracting image from page {page_num+1}: {e}")
+                        error_count += 1
                         continue
             
+            logger.info(f"Images: {success_count} extracted, {error_count} failed for {pdf_name}")
             doc.close()
             
         except Exception as e:
-            logger.error(f"Error extracting images from {pdf_path}: {e}")
+            logger.error(f"Error in image extraction for {pdf_path}: {e}")

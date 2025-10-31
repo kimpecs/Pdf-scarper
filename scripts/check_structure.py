@@ -22,8 +22,8 @@ print("Checking project structure...")
 for file_path in required_files:
     full_path = project_root / file_path
     if full_path.exists():
-        print(f"✓ {file_path}")
+        print(f"[OK] {file_path}")
     else:
-        print(f"✗ {file_path} - MISSING")
+        print(f"[ERROR] {file_path} - MISSING")
 
 print(f"\nProject root: {project_root}")

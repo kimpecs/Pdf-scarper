@@ -38,9 +38,9 @@ python -c "
 from pdf2image import convert_from_path
 try:
     images = convert_from_path('test.pdf', poppler_path=r'C:\Users\YourUsername\Desktop\codes\poppler-25.07.0\Library\bin')
-    print('✓ Poppler working correctly!')
+    print('[OK] Poppler working correctly!')
 except Exception as e:
-    print(f'✗ Poppler error: {e}')
+    print(f'[ERROR] Poppler error: {e}')
 "
 ```
 
