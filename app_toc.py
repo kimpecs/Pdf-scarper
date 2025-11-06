@@ -984,11 +984,11 @@ if __name__ == "__main__":
                 count = cur.fetchone()[0]
                 print(f"🔍 Test search '{test_query}': {count} results")
         else:
-            print("❌ No parts table found - database may be empty")
+            print("[ERROR] No parts table found - database may be empty")
             
         conn.close()
     except Exception as e:
-        print(f"❌ Database error: {e}")
+        print(f"[ERROR] Database error: {e}")
     
     print(f"Static files found:")
     for file in ["index.html", "styles.css", "app.js"]:

@@ -9,10 +9,24 @@ logger = setup_logging()
 
 class DatabaseManager:
     def __init__(self):
-        self.db_path = Path(settings.DATABASE_URL.replace("sqlite:///", ""))
-    
+        # Get DB path string from environment variable
+        db_path_str = settings.DATABASE_URL.replace("sqlite:///", "").strip()
+
+        # Resolve relative to the project root (not CWD)
+        project_root = Path(__file__).resolve().parents[3]  
+        db_path = Path(db_path_str)
+        if not db_path.is_absolute():
+            db_path = (project_root / db_path).resolve()
+
+        # Ensure directory exists
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+
+        self.db_path = db_path
+        logger.info(f"Using database at: {self.db_path}")
+
     def get_connection(self):
         return sqlite3.connect(self.db_path)
+
     
     def search_parts(self, query: str = None, category: str = None, 
                     part_type: str = None, catalog_name: str = None, 

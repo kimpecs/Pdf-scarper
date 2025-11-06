@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 
-DB_PATH = Path("catalog.db")
+DB_PATH = Path(r"C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db")
 
 def print_header(title):
     print(f"\n{'='*60}")
@@ -199,6 +199,23 @@ def print_technical_guides_status(cur):
     else:
         print("No technical guides found")
 
+def print_technical_guides_stats(cur, limit=10):
+    print_header("Technical Guides Stats")
+    
+    # Total guides
+    cur.execute("SELECT COUNT(*) FROM technical_guides;")
+    total = cur.fetchone()[0]
+    print(f"Total technical guides: {total}")
+    
+    if total > 0:
+        # Sample guides
+        cur.execute(f"SELECT guide_name, display_name, category, created_at FROM technical_guides ORDER BY created_at DESC LIMIT ?;", (limit,))
+        rows = cur.fetchall()
+        print(f"Most recent {len(rows)} guides:")
+        for guide in rows:
+            print(f"  {guide[0]:20} {guide[1]:25} ({guide[2]}) Created: {guide[3]}")
+
+
 def check_database_health(cur):
     print_header("Database Health Check")
     
@@ -230,6 +247,16 @@ def check_database_health(cur):
     indexes = [row[0] for row in cur.fetchall()]
     checks.append(("Has indexes", len(indexes) >= 3))
     
+    # Check 7: Technical guides table exists
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='technical_guides';")
+    checks.append(("Technical guides table exists", bool(cur.fetchone())))
+
+    # Check 8: Technical guides has data
+    cur.execute("SELECT COUNT(*) FROM technical_guides;")
+    guides_count = cur.fetchone()[0]
+    checks.append(("Has technical guides data", guides_count > 0))
+
+    
     # Print results
     for check, passed in checks:
         status = "[OK]" if passed else "[ERROR]"
@@ -237,7 +264,7 @@ def check_database_health(cur):
 
 def main():
     if not DB_PATH.exists():
-        print("❌ Database not found. Run db_setup.py first.")
+        print("[ERROR] Database not found. Run db_setup.py first.")
         return
 
     print_header("DATABASE ANALYSIS REPORT")
@@ -267,7 +294,10 @@ def main():
         
         if "technical_guides" in tables:
             print_technical_guides_status(cur)
-        
+            print_table_info(cur, "technical_guides")
+            print_table_stats(cur, "technical_guides")
+            print_technical_guides_stats(cur, limit=10)
+                
         # Database size
         print_database_size()
         
@@ -279,7 +309,7 @@ def main():
         print("[OK] Consider partitioning for very large datasets")
 
     except Exception as e:
-        print(f"❌ Error during analysis: {e}")
+        print(f"[ERROR] Error during analysis: {e}")
     finally:
         conn.close()
 

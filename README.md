@@ -32,7 +32,7 @@ TESTING/
 └── venv/                  # Python virtual environment (not tracked)
 ```
 
-## 🚀 Quick Start
+##   Quick Start
 
 ### 1. Installation
 ```bash

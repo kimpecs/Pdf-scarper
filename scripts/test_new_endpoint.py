@@ -13,7 +13,7 @@ def test_new_endpoint():
         
         if response.status_code == 200:
             data = response.json()
-            print("✅ Test endpoint is working!")
+            print("[OK] Test endpoint is working!")
             print(f"Server Status: {data.get('server_status', 'unknown')}")
             print(f"Database Connection: {data.get('database_connection', 'unknown')}")
             print(f"Tables Exist: {data.get('tables_exist', 'unknown')}")
@@ -29,14 +29,14 @@ def test_new_endpoint():
                 print(f"  - {endpoint}: {status}")
                 
         else:
-            print(f"❌ Test endpoint failed with status {response.status_code}")
+            print(f"[ERROR] Test endpoint failed with status {response.status_code}")
             print(f"Response: {response.text}")
             
     except requests.exceptions.ConnectionError:
-        print("❌ Cannot connect to server. Make sure it's running:")
+        print("[ERROR] Cannot connect to server. Make sure it's running:")
         print("   python app_toc.py")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"[ERROR] Error: {e}")
 
 def test_all_endpoints():
     BASE_URL = "http://localhost:8000"
@@ -54,14 +54,14 @@ def test_all_endpoints():
     for endpoint in endpoints:
         try:
             response = requests.get(f"{BASE_URL}{endpoint}", timeout=5)
-            status = "✅" if response.status_code == 200 else "❌"
+            status = "[OK]" if response.status_code == 200 else "[ERROR]"
             print(f"{status} {endpoint} - Status: {response.status_code}")
             
             if response.status_code != 200:
                 print(f"   Response: {response.text[:100]}...")
                 
         except Exception as e:
-            print(f"❌ {endpoint} - Error: {e}")
+            print(f"[ERROR] {endpoint} - Error: {e}")
             
 def test_dayton_part_detection():
     sample_text = "D50 brake assembly with 600-123 caliper and CH5678 kit"

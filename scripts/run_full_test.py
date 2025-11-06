@@ -20,10 +20,10 @@ def run_script(script_name):
             print("STDERR:", result.stderr)
         return result.returncode == 0
     except subprocess.TimeoutExpired:
-        print(f"❌ {script_name} timed out")
+        print(f"[ERROR] {script_name} timed out")
         return False
     except Exception as e:
-        print(f"❌ {script_name} failed: {e}")
+        print(f"[ERROR] {script_name} failed: {e}")
         return False
 
 def main():
@@ -46,7 +46,7 @@ def main():
             success = run_script(str(script))
             results.append(success)
         else:
-            print(f"❌ Script not found: {script}")
+            print(f"[ERROR] Script not found: {script}")
             results.append(False)
     
     print("\n" + "="*60)
@@ -57,7 +57,7 @@ def main():
     total = len(results)
     
     for i, (script, success) in enumerate(zip(test_scripts, results)):
-        status = "✅ PASS" if success else "❌ FAIL"
+        status = "[OK] PASS" if success else "[ERROR] FAIL"
         print(f"{i+1}. {script.name}: {status}")
     
     print(f"\nOverall: {passed}/{total} tests passed")

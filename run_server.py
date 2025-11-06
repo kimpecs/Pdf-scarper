@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-Quick start script for the FastAPI server
+Unified launcher for the FastAPI Knowledge Base server
+Ensures all directories exist, initializes the database,
+and launches Uvicorn.
 """
 import uvicorn
 import sys
@@ -12,39 +14,43 @@ def ensure_directories():
     app_dir = project_root / "app"
     data_dir = app_dir / "data"
     static_dir = app_dir / "static"
-    
-    # Create directories
+    templates_dir = app_dir / "templates"
+
+    # List of required directories
     directories = [
         data_dir,
-        data_dir / "pdfs", 
+        data_dir / "pdfs",
         data_dir / "page_images",
         data_dir / "guides",
-        static_dir
+        static_dir,
+        templates_dir
     ]
-    
+
     for directory in directories:
         directory.mkdir(parents=True, exist_ok=True)
-        print(f"Ensured directory exists: {directory}")
+        print(f"[OK] Ensured directory exists: {directory}")
 
 def main():
-    """Main function to start the server"""
+    """Main entrypoint for the FastAPI application"""
     try:
-        # Ensure directories exist first
+        # Step 1 — Ensure required directories
         ensure_directories()
-        
-        # Import after creating directories
+
+        # Step 2 — Import after directories exist
         from app.main import app
-        from app.services.db.setup import init_database
-        
-        # Initialize database
-        print("Initializing database...")
-        init_database()
-        
-        # Start server
-        print("Starting FastAPI server on http://0.0.0.0:8000")
-        print("API documentation: http://localhost:8000/docs")
-        print("Press Ctrl+C to stop the server")
-        
+        from app.utils.config import settings
+
+        # Step 4 — Display startup diagnostics
+        print("\n Starting Knowledge Base API server")
+        print("────────────────────────────────────────────")
+        print(f"Frontend URL:        http://localhost:8000")
+        print(f"API Docs:            http://localhost:8000/docs")
+        print(f"Static Directory:    {settings.STATIC_DIR}")
+        print(f"Templates Directory: {settings.TEMPLATES_DIR}")
+        print("────────────────────────────────────────────")
+        print("Press Ctrl+C to stop the server\n")
+
+        # Step 5 — Start Uvicorn
         uvicorn.run(
             "app.main:app",
             host="0.0.0.0",
@@ -52,12 +58,16 @@ def main():
             reload=True,
             log_level="info"
         )
-        
+
     except ImportError as e:
-        print(f"Import error: {e}")
-        print("Make sure you're running from the project root directory")
+        print(f"[ERROR] Import error: {e}")
+        print("Hint: Run this script from your project root (where 'app/' resides).")
+        sys.exit(1)
+
     except Exception as e:
-        print(f"Error starting server: {e}")
+        print(f"[ERROR] Error starting server: {e}")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

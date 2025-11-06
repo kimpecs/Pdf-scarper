@@ -2,24 +2,28 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from app.utils.config import settings
+from fastapi.responses import FileResponse
 from pathlib import Path
 
-# Import routes
-from app.routes import parts, guides, health
+# Internal imports
 from app.utils.config import settings
 from app.utils.logger import setup_logging
+from app.routes import parts, guides, health
 
-# Setup logging
-logger = setup_logging()
-
+# ------------------------------------------------------------------------------
+# [OK] Initialize FastAPI app
+# ------------------------------------------------------------------------------
 app = FastAPI(
     title=settings.FRONTEND_TITLE,
     description=settings.FRONTEND_DESCRIPTION,
     version="1.0.0"
 )
 
-# CORS middleware
+# ------------------------------------------------------------------------------
+# [OK] Setup logging and CORS
+# ------------------------------------------------------------------------------
+logger = setup_logging()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,52 +32,80 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create data directories BEFORE mounting
-data_dir = Path(__file__).parent / "data"
-static_dir = Path(__file__).parent / "static"
+# ------------------------------------------------------------------------------
+# [OK] Define base paths and ensure directories exist
+# ------------------------------------------------------------------------------
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
+STATIC_DIR = BASE_DIR / "static"
+TEMPLATES_DIR = settings.TEMPLATES_DIR  # ensure this points to app/templates
 
-# Ensure directories exist before mounting
-data_dir.mkdir(exist_ok=True)
-(data_dir / "pdfs").mkdir(exist_ok=True)
-(data_dir / "page_images").mkdir(exist_ok=True)
-(data_dir / "guides").mkdir(exist_ok=True)
-static_dir.mkdir(exist_ok=True)
+for folder in [DATA_DIR, STATIC_DIR, DATA_DIR / "pdfs", DATA_DIR / "page_images", DATA_DIR / "guides"]:
+    folder.mkdir(parents=True, exist_ok=True)
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+# ------------------------------------------------------------------------------
+# [OK] Mount static and data directories
+# ------------------------------------------------------------------------------
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/pdfs", StaticFiles(directory=DATA_DIR / "pdfs"), name="pdfs")
+app.mount("/images", StaticFiles(directory=DATA_DIR / "page_images"), name="images")
+app.mount("/guides", StaticFiles(directory=DATA_DIR / "guides"), name="guides")
 
-# Mount data directories
-app.mount("/pdfs", StaticFiles(directory=data_dir / "pdfs"), name="pdfs")
-app.mount("/images", StaticFiles(directory=data_dir / "page_images"), name="images")
-app.mount("/guides", StaticFiles(directory=data_dir / "guides"), name="guides")
+# ------------------------------------------------------------------------------
+# [OK] Template configuration (for base.html + index.html via Jinja2)
+# ------------------------------------------------------------------------------
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
-# Configure templates
-templates = Jinja2Templates(directory=settings.TEMPLATES_DIR)
-
-# Include routers
-from app.routes import guides, parts, health
+# ------------------------------------------------------------------------------
+# [OK] Include routers
+# ------------------------------------------------------------------------------
 app.include_router(guides.router, prefix="/api/guides", tags=["guides"])
 app.include_router(parts.router, prefix="/api/parts", tags=["parts"])
 app.include_router(health.router, prefix="/api/health", tags=["health"])
 
-# Serve frontend
+# ------------------------------------------------------------------------------
+# [OK] Frontend serving routes
+# ------------------------------------------------------------------------------
 @app.get("/")
 async def serve_frontend():
-    return FileResponse(settings.STATIC_DIR / 'index.html')
+    """Serve main SPA index file."""
+    index_path = STATIC_DIR / "index.html"
+    if not index_path.exists():
+        logger.error(f"Index file not found at {index_path}")
+        return {"error": "Frontend not built or missing index.html"}
+    return FileResponse(index_path)
+
 
 @app.get("/search")
 async def serve_search():
-    return FileResponse(settings.STATIC_DIR / 'index.html')
+    """Allow direct URL access to /search (SPA route)."""
+    return FileResponse(STATIC_DIR / "index.html")
+
 
 @app.get("/guides/{path:path}")
-async def serve_guide_routes():
-    return FileResponse(settings.STATIC_DIR / 'index.html')
+async def serve_guide_routes(path: str):
+    """SPA catch-all for guide routes."""
+    return FileResponse(STATIC_DIR / "index.html")
 
+
+# ------------------------------------------------------------------------------
+# [OK] Startup event logging
+# ------------------------------------------------------------------------------
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Starting Knowledge Base API")
-    logger.info("Data directories are ready")
+    logger.info(" Knowledge Base API starting...")
+    logger.info(f"Static directory: {STATIC_DIR}")
+    logger.info(f"Templates directory: {TEMPLATES_DIR}")
+    logger.info("Data directories ready and mounted successfully.")
 
+# ------------------------------------------------------------------------------
+# [OK] Local development entrypoint
+# ------------------------------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    )
