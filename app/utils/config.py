@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings:
-    # Database
+    # FIXED: Use the correct database path
     DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/catalog.db")
     
     # AWS S3
@@ -20,13 +20,13 @@ class Settings:
     MAX_PDF_PAGES = int(os.getenv("MAX_PDF_PAGES", "1000"))
     IMAGE_DPI = int(os.getenv("IMAGE_DPI", "150"))
     
-    # Paths
-    BASE_DIR = Path(__file__).parent.parent.parent
+    # Paths - FIXED: Use correct base directory
+    BASE_DIR = Path(__file__).parent.parent  # Points to app/ directory
     DATA_DIR = BASE_DIR / "data"
-    STATIC_DIR = BASE_DIR / "app" / "static"
+    STATIC_DIR = BASE_DIR / "static"
     
-    # NEW: Frontend & Technical Guides Configuration
-    TEMPLATES_DIR = BASE_DIR / "app" / "templates"
+    # Templates
+    TEMPLATES_DIR = BASE_DIR / "templates"
     GUIDES_DIR = DATA_DIR / "guides"
     PDFS_DIR = DATA_DIR / "pdfs"
     PAGE_IMAGES_DIR = DATA_DIR / "page_images"
@@ -55,8 +55,6 @@ class Settings:
     MAX_UPLOAD_SIZE = int(os.getenv("MAX_UPLOAD_SIZE", "100"))  # MB
     
     # Feature Flags
-    
-    
     ENABLE_IMAGE_EXTRACTION = os.getenv("ENABLE_IMAGE_EXTRACTION", "true").lower() == "true"
     ENABLE_PDF_DOWNLOAD = os.getenv("ENABLE_PDF_DOWNLOAD", "true").lower() == "true"
     ENABLE_ADVANCED_SEARCH = os.getenv("ENABLE_ADVANCED_SEARCH", "true").lower() == "true"

@@ -25,3 +25,7 @@ build/
 
 # Egg info
 *.egg-info
+
+# Log files
+*.log
+logs/

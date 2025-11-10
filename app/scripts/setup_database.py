@@ -7,14 +7,14 @@ from pathlib import Path
 import sqlite3
 
 # Add project root to Python path
-project_root = Path(__file__).resolve().parent.parent
+project_root = Path(__file__).resolve().parent.parent  # Points to app/ directory
 sys.path.insert(0, str(project_root))
 
 def setup_database():
     """Initialize database without importing app modules"""
     
-    # Default database path
-    db_path = project_root / "knowledge_base.db"
+    # FIXED: Use the correct database path that matches your config
+    db_path = project_root / "data" / "catalog.db"  # This matches what your PDF processing expects
     data_dir = project_root / "data"
     images_dir = data_dir / "page_images"
     pdf_dir = data_dir / "pdfs"

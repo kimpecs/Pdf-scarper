@@ -5,17 +5,20 @@ Process technical guide PDFs
 import sys
 from pathlib import Path
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# EXACT PATH: This script is in app/scripts/
+script_dir = Path(__file__).parent  # app/scripts/
+app_dir = script_dir.parent         # app/
+sys.path.insert(0, str(app_dir))
 
-from app.services.pdf_processing.extract_guides import GuideExtractor
-from app.utils.logger import setup_logging
+from services.pdf_processing.extract_guides import GuideExtractor
+from utils.logger import setup_logging
 
 logger = setup_logging()
 
 def process_technical_guides():
     """Process all technical guide PDFs"""
-    guides_directory = Path("app/data/guides")
+    data_dir = app_dir / "data"
+    guides_directory = data_dir / "guides"
     
     if not guides_directory.exists():
         logger.error(f"Guides directory not found: {guides_directory}")

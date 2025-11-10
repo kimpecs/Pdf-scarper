@@ -17382,3 +17382,552 @@
 2025-11-06 13:30:30,739 - watchfiles.main - INFO - 1 change detected
 2025-11-06 13:30:31,098 - watchfiles.main - INFO - 1 change detected
 2025-11-06 13:30:31,461 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:43:56,820 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:43:56,828 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:43:56,833 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:43:58,023 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:43:58,031 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:43:58,038 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:43:58,051 - app.utils.logger - INFO -  Knowledge Base API starting...
+2025-11-06 13:43:58,051 - app.utils.logger - INFO - Static directory: C:\Users\kpecco\Desktop\codes\TESTING\app\static
+2025-11-06 13:43:58,052 - app.utils.logger - INFO - Templates directory: C:\Users\kpecco\Desktop\codes\TESTING\app\templates
+2025-11-06 13:43:58,052 - app.utils.logger - INFO - Data directories ready and mounted successfully.
+2025-11-06 13:43:58,112 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:43:58,475 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:43:58,841 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:43:59,205 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:43:59,558 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:43:59,930 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:00,292 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:00,645 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:01,008 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:01,360 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:01,723 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:02,075 - watchfiles.main - INFO - 2 changes detected
+2025-11-06 13:44:02,489 - watchfiles.main - INFO - 4 changes detected
+2025-11-06 13:44:02,906 - watchfiles.main - INFO - 5 changes detected
+2025-11-06 13:44:03,272 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:03,637 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:03,994 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:04,352 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:04,713 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:05,072 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:05,427 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:05,794 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:06,160 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:06,527 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:06,882 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:07,237 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:07,590 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:07,943 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:08,309 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:08,664 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:09,024 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:09,391 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:09,757 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:10,111 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:10,471 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:10,824 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:11,190 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:11,558 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:11,925 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:12,286 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:12,645 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:13,010 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:13,369 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:13,722 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:14,077 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:14,436 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:14,796 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:15,155 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:15,511 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:15,868 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:16,222 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:16,585 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:16,942 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:17,304 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:17,663 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:18,024 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:18,384 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:18,744 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:19,109 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:19,476 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:19,839 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:20,200 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:20,558 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:20,924 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:21,279 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:21,642 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:21,994 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:22,349 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:22,701 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:23,060 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:23,415 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:23,774 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:24,130 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:24,491 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:24,849 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:25,208 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:25,566 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:25,922 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:26,286 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:26,647 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:27,003 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:27,355 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:27,712 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:28,071 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:28,424 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:28,788 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:29,141 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:29,506 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:29,863 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:30,222 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:30,583 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:30,941 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:31,306 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:31,672 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:32,030 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:32,388 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:32,742 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:33,109 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:33,473 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:33,833 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:34,196 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:34,549 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:34,906 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:35,274 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:35,629 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:35,988 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:36,347 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:36,709 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:37,071 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:37,428 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:37,794 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:38,157 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:38,519 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:38,877 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:39,235 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:39,591 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:39,957 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:40,308 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:40,662 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:41,019 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:41,385 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:41,744 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:42,104 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:42,458 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:42,823 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:43,191 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:43,553 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:43,911 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:44,274 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:44,637 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:44,996 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:45,360 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:45,724 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:46,090 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:46,458 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:46,818 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:47,175 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:47,539 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:47,898 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:48,258 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:48,612 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:48,980 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:49,337 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:49,695 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:50,051 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:50,405 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:50,766 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:51,132 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:51,487 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:51,841 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:52,204 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:52,557 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:52,917 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:53,269 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:53,624 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:53,988 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:54,355 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:54,709 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:55,068 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:55,426 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:55,787 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:56,147 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:56,502 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:56,859 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:57,218 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:57,576 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:57,936 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:58,292 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:58,655 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:59,015 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:59,375 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:44:59,736 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:00,100 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:00,455 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:00,807 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:01,166 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:01,519 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:01,883 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:02,238 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:02,602 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:02,958 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:03,320 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:03,678 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:04,038 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:04,601 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:04,963 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:05,326 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:05,680 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:06,039 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:06,401 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:06,759 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:07,118 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:07,477 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:07,829 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:08,189 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:08,550 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:08,904 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:09,257 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:09,616 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:09,971 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:10,337 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:10,694 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:11,052 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:11,413 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:11,769 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:12,123 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:12,485 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:12,838 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:13,204 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:13,570 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:13,933 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:14,291 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:14,643 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:14,996 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:15,351 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:15,707 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:16,065 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:16,430 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:16,798 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:17,155 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:17,521 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:17,883 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:18,238 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:18,595 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:18,954 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:19,311 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:19,663 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:20,027 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:20,389 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:20,742 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:21,099 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:21,456 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:21,819 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:22,171 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:22,522 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:22,885 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:23,250 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:23,603 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:23,955 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:24,311 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:24,667 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:25,020 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:25,376 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:25,731 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:26,086 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:26,448 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:26,808 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:27,166 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:27,532 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:27,887 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:28,241 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:28,600 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:28,953 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:29,314 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:29,671 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:30,031 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:30,394 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:30,755 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:31,111 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:31,469 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:31,840 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:32,206 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:32,569 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:32,938 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:33,293 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:33,650 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:34,011 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:34,364 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:34,719 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:35,080 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:35,437 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:35,802 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:36,166 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:36,532 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:36,887 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:37,251 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:37,609 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:37,962 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:38,320 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:38,686 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:39,044 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:39,397 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:39,758 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:40,122 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:40,477 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:40,833 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:41,200 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:41,566 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:41,925 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:42,289 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:42,644 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:43,009 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:43,361 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:43,719 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:44,081 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:44,440 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:44,804 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:45,165 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:45,531 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:45,887 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:46,243 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:46,597 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:46,956 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:47,318 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:47,678 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:48,036 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:48,401 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:48,756 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:49,115 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:49,469 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:49,836 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:50,209 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:50,566 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:50,920 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:51,286 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:51,652 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:52,011 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:52,368 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:52,732 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:53,099 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:53,455 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:53,819 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:54,183 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:54,541 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:54,898 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:55,256 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:55,615 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:55,969 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:56,323 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:56,687 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:57,044 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:57,401 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:57,760 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:58,117 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:58,477 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:58,838 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:59,198 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:59,564 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:45:59,920 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:00,281 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:00,642 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:01,001 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:01,370 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:01,747 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:02,115 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:02,470 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:02,829 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:03,193 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:03,545 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:03,902 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:04,268 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:04,625 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:04,982 - watchfiles.main - INFO - 2 changes detected
+2025-11-06 13:46:13,783 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:14,671 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:46:14,677 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:46:14,686 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:46:14,692 - app.utils.logger - INFO -  Knowledge Base API starting...
+2025-11-06 13:46:14,692 - app.utils.logger - INFO - Static directory: C:\Users\kpecco\Desktop\codes\TESTING\app\static
+2025-11-06 13:46:14,692 - app.utils.logger - INFO - Templates directory: C:\Users\kpecco\Desktop\codes\TESTING\app\templates
+2025-11-06 13:46:14,692 - app.utils.logger - INFO - Data directories ready and mounted successfully.
+2025-11-06 13:46:14,751 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:15,114 - watchfiles.main - INFO - 1 change detected
+2025-11-06 13:46:41,788 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:46:41,793 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:46:41,804 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:46:44,496 - app.utils.logger - INFO - Starting batch PDF processing...
+2025-11-06 13:46:44,499 - app.utils.logger - INFO - Found 11 PDF files to process
+2025-11-06 13:46:44,502 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:46:44,503 - app.utils.logger - INFO - Processing catalog PDF: Dana_Spicer.pdf
+2025-11-06 13:46:45,503 - app.utils.logger - INFO - Images: 0 extracted, 0 failed for Dana_Spicer
+2025-11-06 13:46:45,503 - app.utils.logger - INFO - Extracted 460 parts from Dana_Spicer
+2025-11-06 13:46:45,513 - app.utils.logger - ERROR - Error processing Dana_Spicer.pdf: no such table: parts
+2025-11-06 13:46:45,514 - app.utils.logger - INFO - Processing catalog PDF: Dayton_Hydraulic_Brakes.pdf
+2025-11-06 13:46:47,155 - app.utils.logger - INFO - Images: 139 extracted, 0 failed for Dayton_Hydraulic_Brakes
+2025-11-06 13:46:47,155 - app.utils.logger - INFO - Extracted 1042 parts from Dayton_Hydraulic_Brakes
+2025-11-06 13:46:47,157 - app.utils.logger - ERROR - Error processing Dayton_Hydraulic_Brakes.pdf: no such table: parts
+2025-11-06 13:46:47,157 - app.utils.logger - INFO - Processing catalog PDF: FortPro_HeavyDuty.pdf
+2025-11-06 13:47:03,921 - app.utils.logger - INFO - Images: 680 extracted, 0 failed for FortPro_HeavyDuty
+2025-11-06 13:47:03,923 - app.utils.logger - INFO - Extracted 3518 parts from FortPro_HeavyDuty
+2025-11-06 13:47:03,925 - app.utils.logger - ERROR - Error processing FortPro_HeavyDuty.pdf: no such table: parts
+2025-11-06 13:47:03,926 - app.utils.logger - INFO - Processing catalog PDF: FortPro_Lighting.pdf
+2025-11-06 13:47:18,678 - app.utils.logger - INFO - Images: 955 extracted, 0 failed for FortPro_Lighting
+2025-11-06 13:47:18,682 - app.utils.logger - INFO - Extracted 1586 parts from FortPro_Lighting
+2025-11-06 13:47:18,689 - app.utils.logger - ERROR - Error processing FortPro_Lighting.pdf: no such table: parts
+2025-11-06 13:47:18,691 - app.utils.logger - INFO - Processing catalog PDF: FP_Caterpillar.pdf
+2025-11-06 13:48:00,982 - app.utils.logger - INFO - Images: 96 extracted, 0 failed for FP_Caterpillar
+2025-11-06 13:48:00,987 - app.utils.logger - INFO - Extracted 142277 parts from FP_Caterpillar
+2025-11-06 13:48:01,004 - app.utils.logger - ERROR - Error processing FP_Caterpillar.pdf: no such table: parts
+2025-11-06 13:48:01,005 - app.utils.logger - INFO - Processing catalog PDF: FP_Cummins.pdf
+2025-11-06 13:48:31,484 - app.utils.logger - INFO - Images: 155 extracted, 0 failed for FP_Cummins
+2025-11-06 13:48:31,487 - app.utils.logger - INFO - Extracted 40009 parts from FP_Cummins
+2025-11-06 13:48:31,606 - app.utils.logger - ERROR - Error processing FP_Cummins.pdf: no such table: parts
+2025-11-06 13:48:31,608 - app.utils.logger - INFO - Processing catalog PDF: FP_Detroit.pdf
+2025-11-06 13:48:57,557 - app.utils.logger - INFO - Images: 194 extracted, 0 failed for FP_Detroit
+2025-11-06 13:48:57,560 - app.utils.logger - INFO - Extracted 18582 parts from FP_Detroit
+2025-11-06 13:48:57,604 - app.utils.logger - ERROR - Error processing FP_Detroit.pdf: no such table: parts
+2025-11-06 13:48:57,605 - app.utils.logger - INFO - Processing catalog PDF: FP_International.pdf
+2025-11-06 13:49:24,049 - app.utils.logger - INFO - Images: 179 extracted, 0 failed for FP_International
+2025-11-06 13:49:24,051 - app.utils.logger - INFO - Extracted 11371 parts from FP_International
+2025-11-06 13:49:24,068 - app.utils.logger - ERROR - Error processing FP_International.pdf: no such table: parts
+2025-11-06 13:49:24,069 - app.utils.logger - INFO - Processing catalog PDF: Nelson_Exhaust.pdf
+2025-11-06 13:49:38,906 - app.utils.logger - INFO - Images: 200 extracted, 0 failed for Nelson_Exhaust
+2025-11-06 13:49:38,909 - app.utils.logger - INFO - Extracted 2325 parts from Nelson_Exhaust
+2025-11-06 13:49:38,934 - app.utils.logger - ERROR - Error processing Nelson_Exhaust.pdf: no such table: parts
+2025-11-06 13:49:38,935 - app.utils.logger - INFO - Processing catalog PDF: PAI_Drivetrain.pdf
+2025-11-06 13:50:15,867 - app.utils.logger - INFO - Images: 330 extracted, 0 failed for PAI_Drivetrain
+2025-11-06 13:50:15,872 - app.utils.logger - INFO - Extracted 3513 parts from PAI_Drivetrain
+2025-11-06 13:50:15,875 - app.utils.logger - ERROR - Error processing PAI_Drivetrain.pdf: no such table: parts
+2025-11-06 13:50:15,876 - app.utils.logger - INFO - Processing catalog PDF: Velvac.pdf
+2025-11-06 13:50:53,863 - app.utils.logger - INFO - Images: 208 extracted, 0 failed for Velvac
+2025-11-06 13:50:53,870 - app.utils.logger - INFO - Extracted 13576 parts from Velvac
+2025-11-06 13:50:53,876 - app.utils.logger - ERROR - Error processing Velvac.pdf: no such table: parts
+2025-11-06 13:50:53,877 - app.utils.logger - INFO - PDF processing completed! Total parts extracted: 0
+2025-11-06 13:50:53,898 - app.utils.logger - INFO - Found 19 technical guides
+2025-11-06 13:50:53,898 - app.utils.logger - INFO - Processing technical guide: 22464952 Caterpillar 3406 Engine OPS 11-06.pdf
+2025-11-06 13:50:59,249 - app.utils.logger - INFO - Processed technical guide: 22464952 Caterpillar 3406 Engine OPS 11-06
+2025-11-06 13:50:59,253 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:50:59,254 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:50:59,254 - app.utils.logger - INFO - Processing technical guide: ACE TM 250 Truck Crane Specs.pdf
+2025-11-06 13:51:09,319 - app.utils.logger - INFO - Processed technical guide: ACE TM 250 Truck Crane Specs
+2025-11-06 13:51:09,332 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:51:09,333 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:51:09,334 - app.utils.logger - INFO - Processing technical guide: Dana_Spicer.pdf
+2025-11-06 13:51:10,975 - app.utils.logger - INFO - Processed technical guide: Dana_Spicer
+2025-11-06 13:51:10,978 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:51:10,980 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:51:10,981 - app.utils.logger - INFO - Processing technical guide: Dayton-Motor-Product-Guide-8SP4571 copy.pdf
+2025-11-06 13:51:11,486 - app.utils.logger - INFO - Processed technical guide: Dayton-Motor-Product-Guide-8SP4571 copy
+2025-11-06 13:51:11,487 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:51:11,489 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:51:11,489 - app.utils.logger - INFO - Processing technical guide: Dayton-Motor-Product-Guide-8SP4571.pdf
+2025-11-06 13:51:11,882 - app.utils.logger - INFO - Processed technical guide: Dayton-Motor-Product-Guide-8SP4571
+2025-11-06 13:51:11,884 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:51:11,885 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:51:11,886 - app.utils.logger - INFO - Processing technical guide: DAYTON-NPA-OCT-2023 copy.pdf
+2025-11-06 13:51:12,112 - app.utils.logger - INFO - Processed technical guide: DAYTON-NPA-OCT-2023 copy
+2025-11-06 13:51:12,113 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:51:12,115 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:51:12,115 - app.utils.logger - INFO - Processing technical guide: DAYTON-NPA-OCT-2023.pdf
+2025-11-06 13:51:12,350 - app.utils.logger - INFO - Processed technical guide: DAYTON-NPA-OCT-2023
+2025-11-06 13:51:12,351 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:51:12,353 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:51:12,353 - app.utils.logger - INFO - Processing technical guide: Dayton_Hydraulic_Brakes.pdf
+2025-11-06 13:51:13,670 - app.utils.logger - INFO - Processed technical guide: Dayton_Hydraulic_Brakes
+2025-11-06 13:51:13,671 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:51:13,673 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:51:13,673 - app.utils.logger - INFO - Processing technical guide: detroit-serie-60g.pdf
+2025-11-06 13:51:48,040 - app.utils.logger - INFO - Processed technical guide: detroit-serie-60g
+2025-11-06 13:51:48,044 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:51:48,045 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:51:48,046 - app.utils.logger - INFO - Processing technical guide: FortPro_HeavyDuty.pdf
+2025-11-06 13:52:03,851 - app.utils.logger - INFO - Processed technical guide: FortPro_HeavyDuty
+2025-11-06 13:52:03,864 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:52:03,866 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:52:03,866 - app.utils.logger - INFO - Processing technical guide: FortPro_Lighting.pdf
+2025-11-06 13:52:14,379 - app.utils.logger - INFO - Processed technical guide: FortPro_Lighting
+2025-11-06 13:52:14,383 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:52:14,384 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:52:14,384 - app.utils.logger - INFO - Processing technical guide: FP_Caterpillar.pdf
+2025-11-06 13:52:50,664 - app.utils.logger - INFO - Processed technical guide: FP_Caterpillar
+2025-11-06 13:52:50,667 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:52:50,668 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:52:50,669 - app.utils.logger - INFO - Processing technical guide: FP_Cummins.pdf
+2025-11-06 13:53:12,030 - app.utils.logger - INFO - Processed technical guide: FP_Cummins
+2025-11-06 13:53:12,035 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:53:12,037 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:53:12,038 - app.utils.logger - INFO - Processing technical guide: FP_Detroit.pdf
+2025-11-06 13:53:29,379 - app.utils.logger - INFO - Processed technical guide: FP_Detroit
+2025-11-06 13:53:29,382 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:53:29,384 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:53:29,385 - app.utils.logger - INFO - Processing technical guide: FP_International.pdf
+2025-11-06 13:53:42,117 - app.utils.logger - INFO - Processed technical guide: FP_International
+2025-11-06 13:53:42,121 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:53:42,122 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:53:42,122 - app.utils.logger - INFO - Processing technical guide: Nelson_Exhaust.pdf
+2025-11-06 13:53:47,582 - app.utils.logger - INFO - Processed technical guide: Nelson_Exhaust
+2025-11-06 13:53:47,586 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:53:47,588 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:53:47,588 - app.utils.logger - INFO - Processing technical guide: PAI_Drivetrain.pdf
+2025-11-06 13:54:05,113 - app.utils.logger - INFO - Processed technical guide: PAI_Drivetrain
+2025-11-06 13:54:05,114 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:54:05,117 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:54:05,117 - app.utils.logger - INFO - Processing technical guide: Stemco_Gaff.pdf
+2025-11-06 13:54:44,739 - app.utils.logger - INFO - Processed technical guide: Stemco_Gaff
+2025-11-06 13:54:44,741 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:54:44,742 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:54:44,743 - app.utils.logger - INFO - Processing technical guide: Velvac.pdf
+2025-11-06 13:55:21,163 - app.utils.logger - INFO - Processed technical guide: Velvac
+2025-11-06 13:55:21,166 - app.utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db
+2025-11-06 13:55:21,167 - app.utils.logger - ERROR - Error saving guide to database: no such table: technical_guides
+2025-11-06 13:55:21,167 - app.utils.logger - INFO - Processed 0 technical guides
+2025-11-06 13:55:21,168 - app.utils.logger - INFO - PDF processing completed!
+2025-11-06 14:32:18,240 - utils.logger - INFO - Starting batch PDF processing...
+2025-11-06 14:32:18,243 - utils.logger - INFO - No PDF files found in C:\Users\kpecco\Desktop\codes\TESTING\app\data\pdfs
+2025-11-06 14:32:18,244 - utils.logger - INFO - PDF processing completed!
+2025-11-06 14:43:05,523 - utils.logger - INFO - Starting batch PDF processing...
+2025-11-06 14:43:05,525 - utils.logger - INFO - Found 16 PDF files to process
+2025-11-06 14:43:05,527 - utils.logger - INFO - Using database at: C:\Users\kpecco\Desktop\codes\TESTING\app\data\catalog.db
+2025-11-06 14:43:05,528 - utils.logger - INFO - Processing catalog PDF: Automan_Suspension.pdf
+2025-11-06 14:43:05,561 - utils.logger - ERROR - Error processing PDF C:\Users\kpecco\Desktop\codes\TESTING\app\data\pdfs\Automan_Suspension.pdf: No /Root object! - Is this really a PDF?
+2025-11-06 14:43:05,562 - utils.logger - INFO - Successfully processed Automan_Suspension.pdf - extracted 0 parts
+2025-11-06 14:43:05,562 - utils.logger - INFO - Processing catalog PDF: Dana_Spicer.pdf
+2025-11-06 14:43:06,413 - utils.logger - INFO - Images: 0 extracted, 0 failed for Dana_Spicer
+2025-11-06 14:43:06,413 - utils.logger - INFO - Extracted 460 parts from Dana_Spicer
+2025-11-06 14:43:06,419 - utils.logger - ERROR - Error processing Dana_Spicer.pdf: no such table: parts
+2025-11-06 14:43:06,419 - utils.logger - INFO - Processing catalog PDF: Dayton-Parts-Steering-Components-HD.pdf
+2025-11-06 14:43:16,594 - utils.logger - INFO - Images: 243 extracted, 0 failed for Dayton-Parts-Steering-Components-HD
+2025-11-06 14:43:16,595 - utils.logger - INFO - Extracted 5955 parts from Dayton-Parts-Steering-Components-HD
+2025-11-06 14:43:16,596 - utils.logger - ERROR - Error processing Dayton-Parts-Steering-Components-HD.pdf: no such table: parts
+2025-11-06 14:43:16,597 - utils.logger - INFO - Processing catalog PDF: Dayton_Hydraulic_Brakes.pdf
+2025-11-06 14:43:18,780 - utils.logger - INFO - Images: 139 extracted, 0 failed for Dayton_Hydraulic_Brakes
+2025-11-06 14:43:18,780 - utils.logger - INFO - Extracted 1042 parts from Dayton_Hydraulic_Brakes
+2025-11-06 14:43:18,786 - utils.logger - ERROR - Error processing Dayton_Hydraulic_Brakes.pdf: no such table: parts
+2025-11-06 14:43:18,786 - utils.logger - INFO - Processing catalog PDF: FortPro_HeavyDuty.pdf
+2025-11-06 14:43:33,996 - utils.logger - INFO - Images: 680 extracted, 0 failed for FortPro_HeavyDuty
+2025-11-06 14:43:33,997 - utils.logger - INFO - Extracted 3518 parts from FortPro_HeavyDuty
+2025-11-06 14:43:33,999 - utils.logger - ERROR - Error processing FortPro_HeavyDuty.pdf: no such table: parts
+2025-11-06 14:43:33,999 - utils.logger - INFO - Processing catalog PDF: FortPro_Lighting.pdf
+2025-11-06 14:43:47,558 - utils.logger - INFO - Images: 955 extracted, 0 failed for FortPro_Lighting
+2025-11-06 14:43:47,559 - utils.logger - INFO - Extracted 1586 parts from FortPro_Lighting
+2025-11-06 14:43:47,562 - utils.logger - ERROR - Error processing FortPro_Lighting.pdf: no such table: parts
+2025-11-06 14:43:47,562 - utils.logger - INFO - Processing catalog PDF: FP_Caterpillar.pdf
+2025-11-06 14:44:34,986 - utils.logger - INFO - Images: 96 extracted, 0 failed for FP_Caterpillar
+2025-11-06 14:44:34,996 - utils.logger - INFO - Extracted 142277 parts from FP_Caterpillar
+2025-11-06 14:44:35,015 - utils.logger - ERROR - Error processing FP_Caterpillar.pdf: no such table: parts
+2025-11-06 14:44:35,015 - utils.logger - INFO - Processing catalog PDF: FP_Cummins.pdf
+2025-11-06 14:45:06,333 - utils.logger - INFO - Images: 155 extracted, 0 failed for FP_Cummins
+2025-11-06 14:45:06,335 - utils.logger - INFO - Extracted 40009 parts from FP_Cummins
+2025-11-06 14:45:06,572 - utils.logger - ERROR - Error processing FP_Cummins.pdf: no such table: parts
+2025-11-06 14:45:06,572 - utils.logger - INFO - Processing catalog PDF: FP_Detroit.pdf
+2025-11-06 14:45:35,835 - utils.logger - INFO - Images: 194 extracted, 0 failed for FP_Detroit
+2025-11-06 14:45:35,837 - utils.logger - INFO - Extracted 18582 parts from FP_Detroit
+2025-11-06 14:45:35,859 - utils.logger - ERROR - Error processing FP_Detroit.pdf: no such table: parts
+2025-11-06 14:45:35,859 - utils.logger - INFO - Processing catalog PDF: FP_International.pdf
+2025-11-06 14:45:49,441 - utils.logger - INFO - Images: 179 extracted, 0 failed for FP_International
+2025-11-06 14:45:49,443 - utils.logger - INFO - Extracted 11371 parts from FP_International
+2025-11-06 14:45:49,452 - utils.logger - ERROR - Error processing FP_International.pdf: no such table: parts
+2025-11-06 14:45:49,452 - utils.logger - INFO - Processing catalog PDF: Leaf_Springs.pdf

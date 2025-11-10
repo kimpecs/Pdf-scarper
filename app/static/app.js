@@ -1,754 +1,839 @@
-class KnowledgeBaseApp {
-  constructor() {
-    this.currentView = 'grid';
-    this.filters = {
-      q: '',
-      category: '',
-      part_type: '',
-      catalog_type: '',
-      content_type: 'all'
-    };
-    this.catalogData = {};
-    this.lastResults = { results: [] };
-    
-    // ADD CONFIG HERE - Right after other properties
-    this.config = {
-      maxDescriptionLength: 120,
-      maxApplicationsDisplay: 2,
-      searchDebounceMs: 300,
-      enableTechnicalGuides: true,
-      maxSearchResults: 50
-    };
-
-  this.init();
-  }
-
-  async init() {
-    this.bindEvents();
-    await this.loadConfig(); // ADD THIS LINE - Load config first
-    this.loadInitialData();
-    this.setupViewControls();
-  }
-
-  // ADD THIS NEW METHOD - Right after init() method
-  async loadConfig() {
-    try {
-      const response = await fetch('/api/config');
-      if (response.ok) {
-        const config = await response.json();
-        this.config = { ...this.config, ...config };
-        console.log('Loaded frontend configuration:', this.config);
-      }
-    } catch (error) {
-      console.error('Error loading config:', error);
-
-
+class PartsCatalog {
+    constructor() {
+        this.currentResults = [];
+        this.filters = {
+            category: '',
+            partType: '',
+            catalogType: ''
+        };
+        this.config = {};
+        this.currentPart = null;
+        this.viewMode = 'grid'; // 'grid' or 'list'
+        this.init();
     }
-  }
-  bindEvents() {
-    // Buttons
-    document.getElementById('searchBtn')?.addEventListener('click', () => this.performSearch());
-    document.getElementById('showAll')?.addEventListener('click', () => this.showAll());
-    document.getElementById('resetFilters')?.addEventListener('click', () => this.resetFilters());
 
-    // Filter change events
-    document.getElementById('catalog_type')?.addEventListener('change', (e) => {
-      this.filters.catalog_type = e.target.value;
-      this.updateCategoryFilter();
-      this.performSearch();
-    });
-
-    document.getElementById('category')?.addEventListener('change', (e) => {
-      this.filters.category = e.target.value;
-      this.performSearch();
-    });
-
-    document.getElementById('part_type')?.addEventListener('change', (e) => {
-      this.filters.part_type = e.target.value;
-      this.performSearch();
-    });
-
-    document.getElementById('content_type')?.addEventListener('change', (e) => {
-      this.filters.content_type = e.target.value;
-      this.performSearch();
-    });
-
-    // Search input with debounce
-     let searchTimeout;
-    document.getElementById('q')?.addEventListener('input', (e) => {
-      this.filters.q = e.target.value;
-      clearTimeout(searchTimeout);
-      // Use config value instead of hardcoded 300ms
-      searchTimeout = setTimeout(() => this.performSearch(), this.config.searchDebounceMs);
-    });
-
-    // Modal events
-    document.getElementById('pdfModalClose')?.addEventListener('click', () => this.closePdfModal());
-    document.getElementById('popupClose')?.addEventListener('click', () => this.closeImagePopup());
-    document.getElementById('imagePopup')?.addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) this.closeImagePopup();
-    });
-
-    // Sidebar toggle for mobile
-    document.getElementById('sidebarToggle')?.addEventListener('click', () => {
-      document.querySelector('.sidebar')?.classList.toggle('active');
-    });
-  }
-
-  setupViewControls() {
-    document.querySelectorAll('.view-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-        this.currentView = e.currentTarget.dataset.view;
-        this.updateView();
-      });
-    });
-  }
-
-  async loadInitialData() {
-    try {
-      await Promise.all([
-        this.loadCatalogs(),
-        this.loadCategories(),
-        this.loadPartTypes(),
-        this.loadTechnicalGuides()
-      ]);
-      this.performSearch(); // Initial load
-    } catch (error) {
-      console.error('Error loading initial data:', error);
-      this.displayError('Error connecting to server. Please check if the backend is running.');
-    }
-  }
-
-  async loadCatalogs() {
-    try {
-      const response = await fetch('/catalogs');
-      if (!response.ok) throw new Error('Failed to fetch catalogs');
-      
-      const data = await response.json();
-      this.catalogData = data.catalogs.reduce((acc, catalog) => {
-        acc[catalog.name] = catalog;
-        return acc;
-      }, {});
-      
-      const select = document.getElementById('catalog_type');
-      select.innerHTML = '<option value="">All Catalogs</option>';
-      data.catalogs.forEach(catalog => {
-        select.innerHTML += `<option value="${catalog.name}">${catalog.name}</option>`;
-      });
-    } catch (error) {
-      console.error('Error loading catalogs:', error);
-      // rethrow so loadInitialData can handle
-      throw error;
-    }
-  }
-
-  async loadCategories() {
-    try {
-      const response = await fetch('/categories');
-      if (!response.ok) throw new Error('Failed to fetch categories');
-      
-      const data = await response.json();
-      this.allCategories = data.categories || [];
-      this.updateCategoryFilter();
-    } catch (error) {
-      console.error('Error loading categories:', error);
-      throw error;
-    }
-  }
-
-  async loadPartTypes() {
-    try {
-      const response = await fetch('/part_types');
-      if (!response.ok) throw new Error('Failed to fetch part types');
-      
-      const data = await response.json();
-      const select = document.getElementById('part_type');
-      select.innerHTML = '<option value="">All Part Types</option>';
-      (data.part_types || []).forEach(type => {
-        select.innerHTML += `<option value="${type}">${type}</option>`;
-      });
-    } catch (error) {
-      console.error('Error loading part types:', error);
-      throw error;
-    }
-  }
-
-  async loadTechnicalGuides() {
-    try {
-      const response = await fetch('/technical-guides');
-      if (!response.ok) throw new Error('Failed to fetch technical guides');
-      
-      const data = await response.json();
-      this.displayTechnicalGuides(data.guides || []);
-    } catch (error) {
-      console.error('Error loading technical guides:', error);
-      // don't throw here — guides are optional
-    }
-  }
-
-  displayTechnicalGuides(guides) {
-    const container = document.getElementById('guidesList');
-    if (!container) return;
-    container.innerHTML = guides.map(guide => `
-      <div class="guide-item" data-guide="${guide.guide_name}">
-        <div class="guide-name">${guide.display_name}</div>
-        <div class="guide-desc">${guide.description}</div>
-      </div>
-    `).join('');
-
-    // Add click events to guides
-    container.querySelectorAll('.guide-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const guideName = item.dataset.guide;
-        this.openTechnicalGuide(guideName);
-      });
-    });
-  }
-
-  updateCategoryFilter() {
-    const select = document.getElementById('category');
-    if (!select) return;
-    select.innerHTML = '<option value="">All Categories</option>';
-    (this.allCategories || []).forEach(category => {
-      select.innerHTML += `<option value="${category}">${category}</option>`;
-    });
-  }
-
-   async performSearch() {
-    this.setLoadingState(true);
-    
-    try {
-        const params = new URLSearchParams();
-        Object.entries(this.filters).forEach(([key, value]) => {
-            if (value) params.set(key, value);
-        });
-        // Use config value instead of hardcoded limit
-        params.set('limit', this.config.maxSearchResults.toString());
-
-        console.log('Search params:', Object.fromEntries(params));
+    async init() {
+        await this.loadConfig();
+        await this.loadFilters();
+        this.setupEventListeners();
+        this.setupDetailPageListeners();
+        this.setupViewMode();
+        this.performSearch(''); // Load initial results
         
-        const response = await fetch(`/search?${params}`);
-        if (!response.ok) throw new Error('Search request failed');
-        
-        const data = await response.json();
-        
-        this.lastResults = data;
-        this.displayResults(data);
-        this.updateBreadcrumb();
-    } catch (error) {
-        console.error('Search error:', error);
-        this.displayError('Error performing search. Please check server connection.');
-    } finally {
-        this.setLoadingState(false);
-    }
-  }
-
-async loadDaytonCategories() {
-    try {
-        const response = await fetch('/categories?type=dayton');
-        if (response.ok) {
-            const data = await response.json();
-            this.daytonCategories = data.categories;
-            this.updateDaytonFilters();
-        }
-    } catch (error) {
-        console.error('Error loading Dayton categories:', error);
-    }
-}
-
-updateDaytonFilters() {
-    // Add Dayton-specific filters to UI if needed
-    const daytonFilterContainer = document.getElementById('daytonFilters');
-    if (daytonFilterContainer && this.daytonCategories) {
-        daytonFilterContainer.innerHTML = `
-            <div class="filter-group">
-                <label><i class="fas fa-cog"></i> Dayton Category</label>
-                <select id="daytonCategory">
-                    <option value="">All Dayton Categories</option>
-                    ${this.daytonCategories.map(cat => 
-                        `<option value="${cat}">${cat}</option>`
-                    ).join('')}
-                </select>
-            </div>
-        `;
-        
-        // Add event listener for Dayton category filter
-        document.getElementById('daytonCategory')?.addEventListener('change', (e) => {
-            this.filters.dayton_category = e.target.value;
-            this.performSearch();
-        });
-    }
-}
-
-// Enhanced displayResults method for Dayton parts
-createResultCard(part, isGrid) {
-    const gridClass = isGrid ? '' : 'list-view';
-    const imageDataAttr = part.image_url ? `data-image="${part.image_url}"` : '';
-    const pdfLink = part.pdf_url ? `<a href="${part.pdf_url}" class="btn-action btn-pdf" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>` : '';
-    
-    // USE CONFIG VALUES for text limits
-    const shortDescription = part.description ? 
-        (part.description.length > this.config.maxDescriptionLength ? 
-         part.description.substring(0, this.config.maxDescriptionLength) + '...' : 
-         part.description) : 
-        'No description available';
-    
-    // Technical guide button - check if enabled in config
-    const guideBtn = (this.config.enableTechnicalGuides && part.category && this.hasTechnicalGuide(part.category)) ? 
-        `<button class="btn-action btn-guide" data-category="${part.category}">
-            <i class="fas fa-book"></i> Guide
-        </button>` : '';
-
-    // USE CONFIG for applications display limit
-    const applicationsDisplay = part.applications && part.applications.length > 0 ? `
-        <div class="part-applications">
-            <strong>Applications:</strong> ${part.applications.slice(0, this.config.maxApplicationsDisplay).join(', ')}
-            ${part.applications.length > this.config.maxApplicationsDisplay ? 
-              ` and ${part.applications.length - this.config.maxApplicationsDisplay} more...` : ''}
-        </div>
-    ` : '';
-
-    return `
-        <div class="part-card ${gridClass}" data-part-id="${part.id}">
-            <div class="part-header">
-                <div class="part-number">${part.part_number}</div>
-                <div class="badge-container">
-                    <span class="catalog-badge ${part.catalog_type}">${part.catalog_type}</span>
-                    ${part.oe_numbers && part.oe_numbers.length > 0 ? 
-                        `<span class="dayton-badge oe-badge">OE: ${part.oe_numbers[0]}</span>` : ''}
-                </div>
-            </div>
-            
-            <div class="part-meta">
-                <div class="meta-item">
-                    <i class="fas fa-tag"></i>
-                    <span>${part.part_type || 'N/A'}</span>
-                </div>
-                <div class="meta-item">
-                    <i class="fas fa-folder"></i>
-                    <span>${part.category || 'N/A'}</span>
-                </div>
-                <div class="meta-item">
-                    <i class="fas fa-file"></i>
-                    <span>Page ${part.page}</span>
-                </div>
-            </div>
-
-            <div class="part-description">
-                ${shortDescription}
-            </div>
-
-            ${applicationsDisplay}
-
-            <div class="part-actions">
-                ${part.image_url ? `
-                    <button class="btn-action btn-image" ${imageDataAttr}>
-                        <i class="fas fa-image"></i> Image
-                    </button>
-                ` : ''}
-
-                ${pdfLink}
-                
-                ${guideBtn}
-            </div>
-        </div>
-    `;
-}
-
-    // Dayton-specific badges
-    const daytonBadges = [];
-    if (part.catalog_type === 'dayton') {
-        if (part.oe_numbers && part.oe_numbers.length > 0) {
-            daytonBadges.push(`<span class="dayton-badge oe-badge">OE: ${part.oe_numbers[0]}</span>`);
-        }
-        if (part.specifications && Object.keys(part.specifications).length > 0) {
-            daytonBadges.push(`<span class="dayton-badge spec-badge">Specs</span>`);
-        }
-    }
-    
-    return `
-        <div class="part-card ${gridClass}" data-part-id="${part.id}">
-            <div class="part-header">
-                <div class="part-number">${part.part_number}</div>
-                <div class="badge-container">
-                    <span class="catalog-badge ${part.catalog_type}">${part.catalog_type}</span>
-                    ${daytonBadges.join('')}
-                </div>
-            </div>
-            
-            <div class="part-meta">
-                <div class="meta-item">
-                    <i class="fas fa-tag"></i>
-                    <span>${part.part_type || 'N/A'}</span>
-                </div>
-                <div class="meta-item">
-                    <i class="fas fa-folder"></i>
-                    <span>${part.category || 'N/A'}</span>
-                </div>
-                <div class="meta-item">
-                    <i class="fas fa-file"></i>
-                    <span>Page ${part.page}</span>
-                </div>
-            </div>
-
-            ${part.description ? `
-                <div class="part-description">
-                    ${part.description}
-                </div>
-            ` : ''}
-
-            ${part.applications && part.applications.length > 0 ? `
-                <div class="part-applications">
-                    <strong>Applications:</strong> ${part.applications.join(', ')}
-                </div>
-            ` : ''}
-
-            <div class="part-actions">
-                ${part.image_url ? `
-                    <button class="btn-action btn-image" ${imageDataAttr}>
-                        <i class="fas fa-image"></i> Image
-                    </button>
-                ` : ''}
-
-                ${pdfLink}
-                
-                <button class="btn-action btn-guide">
-                    <i class="fas fa-book"></i> Guide
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-  displayResults(data) {
-    const container = document.getElementById('results');
-    if (!container) return;
-
-    if (!data || !data.results || data.results.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <i class="fas fa-search fa-3x"></i>
-          <h3>No results found</h3>
-          <p>Try adjusting your search criteria</p>
-        </div>
-      `;
-      return;
-    }
-
-    const isGridView = this.currentView === 'grid';
-    container.className = isGridView ? 'results-grid' : 'results-list';
-
-    container.innerHTML = data.results.map(part => this.createResultCard(part, isGridView)).join('');
-
-    // Add event listeners
-    container.querySelectorAll('.btn-image').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const card = e.target.closest('.part-card');
-        this.openImagePopup(card);
-      });
-    });
-
-    container.querySelectorAll('.part-card').forEach(card => {
-      card.addEventListener('click', () => {
-        this.showPartDetails(card.dataset.partId);
-      });
-    });
-  }
-
-
-  openImagePopup(card) {
-    if (!card) return;
-    const imageBtn = card.querySelector('.btn-image');
-    const imageUrl = imageBtn?.dataset?.image || '';
-    const pdfUrl = card.querySelector('.btn-pdf')?.href || '#';
-    
-    if (imageUrl) {
-      document.getElementById('popupImage').src = imageUrl;
-    } else {
-      document.getElementById('popupImage').src = '';
-    }
-    document.getElementById('pdfBtn').href = pdfUrl || '#';
-    document.getElementById('imagePopup').style.display = 'flex';
-  }
-
-  closeImagePopup() {
-    document.getElementById('imagePopup').style.display = 'none';
-  }
-
- // Add to your KnowledgeBaseApp class
-
-async openTechnicalGuide(guideName) {
-    try {
-        // Open guide in new tab/window
-        const guideUrl = `/guides/${guideName}`;
-        window.open(guideUrl, '_blank');
-    } catch (error) {
-        console.error('Error opening guide:', error);
-        this.displayError('Error opening technical guide');
-    }
-}
-
-// Enhanced search to include technical guides
-async performSearch() {
-    this.setLoadingState(true);
-    
-    try {
-        const params = new URLSearchParams();
-        Object.entries(this.filters).forEach(([key, value]) => {
-            if (value) params.set(key, value);
-        });
-        params.set('limit', '50'); // Reduced limit for better performance
-
-        console.log('Search params:', Object.fromEntries(params));
-        
-        const response = await fetch(`/search?${params}`);
-        if (!response.ok) throw new Error('Search request failed');
-        
-        const data = await response.json();
-        
-        this.lastResults = data;
-        this.displayResults(data);
-        this.updateBreadcrumb();
-    } catch (error) {
-        console.error('Search error:', error);
-        this.displayError('Error performing search. Please check server connection.');
-    } finally {
-        this.setLoadingState(false);
-    }
-}
-
-// Enhanced result card with limited text
-createResultCard(part, isGrid) {
-    const gridClass = isGrid ? '' : 'list-view';
-    const imageDataAttr = part.image_url ? `data-image="${part.image_url}"` : '';
-    const pdfLink = part.pdf_url ? `<a href="${part.pdf_url}" class="btn-action btn-pdf" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>` : '';
-    
-    // Limit description text
-    const shortDescription = part.description ? 
-        (part.description.length > 120 ? part.description.substring(0, 120) + '...' : part.description) : 
-        'No description available';
-    
-    // Technical guide button for relevant items
-    const guideBtn = part.category && this.hasTechnicalGuide(part.category) ? 
-        `<button class="btn-action btn-guide" data-category="${part.category}">
-            <i class="fas fa-book"></i> Guide
-        </button>` : '';
-
-    return `
-        <div class="part-card ${gridClass}" data-part-id="${part.id}">
-            <div class="part-header">
-                <div class="part-number">${part.part_number}</div>
-                <div class="badge-container">
-                    <span class="catalog-badge ${part.catalog_type}">${part.catalog_type}</span>
-                    ${part.oe_numbers && part.oe_numbers.length > 0 ? 
-                        `<span class="dayton-badge oe-badge">OE: ${part.oe_numbers[0]}</span>` : ''}
-                </div>
-            </div>
-            
-            <div class="part-meta">
-                <div class="meta-item">
-                    <i class="fas fa-tag"></i>
-                    <span>${part.part_type || 'N/A'}</span>
-                </div>
-                <div class="meta-item">
-                    <i class="fas fa-folder"></i>
-                    <span>${part.category || 'N/A'}</span>
-                </div>
-                <div class="meta-item">
-                    <i class="fas fa-file"></i>
-                    <span>Page ${part.page}</span>
-                </div>
-            </div>
-
-            <div class="part-description">
-                ${shortDescription}
-            </div>
-
-            ${part.applications && part.applications.length > 0 ? `
-                <div class="part-applications">
-                    <strong>Applications:</strong> ${part.applications.slice(0, 2).join(', ')}
-                    ${part.applications.length > 2 ? ` and ${part.applications.length - 2} more...` : ''}
-                </div>
-            ` : ''}
-
-            <div class="part-actions">
-                ${part.image_url ? `
-                    <button class="btn-action btn-image" ${imageDataAttr}>
-                        <i class="fas fa-image"></i> Image
-                    </button>
-                ` : ''}
-
-                ${pdfLink}
-                
-                ${guideBtn}
-            </div>
-        </div>
-    `;
-}
-
-hasTechnicalGuide(category) {
-    const guideCategories = ['Engine', 'Brake System', 'Electrical', 'Hydraulic System', 'Drivetrain'];
-    return guideCategories.includes(category);
-}
-
-// Add guide button event listeners
-addGuideEventListeners() {
-    document.querySelectorAll('.btn-guide').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const category = e.target.dataset.category;
-            this.searchTechnicalGuides(category);
-        });
-    });
-}
-
-async searchTechnicalGuides(category) {
-    try {
-        const response = await fetch(`/api/guides/search?category=${category}`);
-        if (response.ok) {
-            const data = await response.json();
-            if (data.guides && data.guides.length > 0) {
-                this.openTechnicalGuide(data.guides[0].guide_name);
+        // Handle browser back/forward
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.page === 'detail') {
+                this.showPartDetailPage(event.state.partId);
             } else {
-                this.displayError('No technical guides found for this category');
+                this.showHomePage();
+            }
+        });
+    }
+
+    async loadConfig() {
+        try {
+            const response = await fetch('/api/config');
+            this.config = await response.json();
+        } catch (error) {
+            console.error('Failed to load config:', error);
+            this.config = {
+                maxDescriptionLength: 120,
+                maxApplicationsDisplay: 2,
+                searchDebounceMs: 300,
+                enableTechnicalGuides: true,
+                maxSearchResults: 50
+            };
+        }
+    }
+
+    async loadFilters() {
+        try {
+            const [categories, partTypes, catalogs] = await Promise.all([
+                this.fetchCategories(),
+                this.fetchPartTypes(),
+                this.fetchCatalogs()
+            ]);
+
+            this.populateFilter('categoryFilter', categories);
+            this.populateFilter('partTypeFilter', partTypes);
+            this.populateFilter('catalogFilter', catalogs.map(cat => cat.name));
+            
+        } catch (error) {
+            console.error('Failed to load filters:', error);
+        }
+    }
+
+    async fetchCategories() {
+        const response = await fetch('/categories');
+        const data = await response.json();
+        return data.categories || [];
+    }
+
+    async fetchPartTypes() {
+        const response = await fetch('/part_types');
+        const data = await response.json();
+        return data.part_types || [];
+    }
+
+    async fetchCatalogs() {
+        const response = await fetch('/catalogs');
+        const data = await response.json();
+        return data.catalogs || [];
+    }
+
+    populateFilter(selectId, options) {
+        const select = document.getElementById(selectId);
+        // Clear existing options except first
+        while (select.children.length > 1) {
+            select.removeChild(select.lastChild);
+        }
+        
+        options.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option;
+            optionElement.textContent = option;
+            select.appendChild(optionElement);
+        });
+    }
+
+    setupEventListeners() {
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const partTypeFilter = document.getElementById('partTypeFilter');
+        const catalogFilter = document.getElementById('catalogFilter');
+
+        // Search with debounce
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.performSearch(e.target.value);
+            }, this.config.searchDebounceMs);
+        });
+
+        searchBtn.addEventListener('click', () => {
+            this.performSearch(searchInput.value);
+        });
+
+        // Filter changes
+        [categoryFilter, partTypeFilter, catalogFilter].forEach(filter => {
+            filter.addEventListener('change', (e) => {
+                const filterType = e.target.id.replace('Filter', '');
+                this.filters[filterType] = e.target.value;
+                this.performSearch(searchInput.value);
+            });
+        });
+
+        // Enter key support
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.performSearch(searchInput.value);
+            }
+        });
+    }
+
+    setupDetailPageListeners() {
+        // Detail page search would navigate back to home with filters
+        // This is handled in the showHomePage method
+    }
+
+    setupViewMode() {
+        const gridView = document.getElementById('gridView');
+        const listView = document.getElementById('listView');
+
+        gridView.addEventListener('click', () => {
+            this.setViewMode('grid');
+        });
+
+        listView.addEventListener('click', () => {
+            this.setViewMode('list');
+        });
+    }
+
+    setViewMode(mode) {
+        this.viewMode = mode;
+        const gridView = document.getElementById('gridView');
+        const listView = document.getElementById('listView');
+        const resultsGrid = document.getElementById('resultsGrid');
+
+        if (mode === 'grid') {
+            gridView.classList.add('view-active');
+            listView.classList.remove('view-active');
+            resultsGrid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+        } else {
+            listView.classList.add('view-active');
+            gridView.classList.remove('view-active');
+            resultsGrid.className = 'grid grid-cols-1 gap-4';
+        }
+
+        // Re-render results with new view mode
+        this.displayResults();
+    }
+
+    async performSearch(query = '') {
+        this.showLoading();
+        
+        try {
+            const params = new URLSearchParams({
+                q: query,
+                ...this.filters,
+                limit: this.config.maxSearchResults
+            });
+
+            const response = await fetch(`/search?${params}`);
+            const data = await response.json();
+            
+            this.currentResults = data.results || [];
+            this.displayResults();
+            
+        } catch (error) {
+            console.error('Search failed:', error);
+            this.showError('Failed to search parts');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    displayResults() {
+        const grid = document.getElementById('resultsGrid');
+        const noResults = document.getElementById('noResults');
+        const resultsCount = document.getElementById('resultsCount');
+        const resultsNumber = document.getElementById('resultsNumber');
+
+        grid.innerHTML = '';
+        
+        if (this.currentResults.length === 0) {
+            noResults.classList.remove('hidden');
+            resultsCount.classList.add('hidden');
+            return;
+        }
+
+        noResults.classList.add('hidden');
+        resultsCount.classList.remove('hidden');
+        resultsNumber.textContent = this.currentResults.length;
+
+        this.currentResults.forEach(part => {
+            const card = this.createPartCard(part);
+            grid.appendChild(card);
+        });
+    }
+    createPartCard(part) {
+        const card = document.createElement('div');
+        card.className = this.viewMode === 'grid' 
+            ? 'part-card bg-white rounded-lg shadow-md overflow-hidden fade-in cursor-pointer'
+            : 'part-card bg-white rounded-lg shadow-md overflow-hidden fade-in cursor-pointer flex';
+        
+        card.addEventListener('click', () => this.showPartDetailPage(part.id));
+        
+        const description = part.description 
+            ? (part.description.length > this.config.maxDescriptionLength 
+                ? part.description.substring(0, this.config.maxDescriptionLength) + '...'
+                : part.description)
+            : 'No description available';
+
+        // FIX: Better image handling
+        const imageUrl = part.image_url || '';
+        const hasImage = imageUrl && !imageUrl.includes('undefined');
+        
+        if (this.viewMode === 'grid') {
+            card.innerHTML = `
+                <div class="h-48 bg-gray-100 relative">
+                    ${hasImage 
+                        ? `<img src="${imageUrl}" alt="${part.part_number}" 
+                            class="w-full h-full object-cover" 
+                            onerror="this.style.display='none'; this.parentNode.querySelector('.image-placeholder').style.display='flex';"
+                            onload="this.style.display='block'; this.parentNode.querySelector('.image-placeholder').style.display='none';">`
+                        : ''
+                    }
+                    <div class="image-placeholder w-full h-full ${hasImage ? 'hidden' : 'flex'} items-center justify-center">
+                        <i class="fas fa-image text-4xl text-gray-400"></i>
+                    </div>
+                    <div class="absolute top-2 right-2 bg-blue-600 text-white px-2 py-1 rounded text-sm">
+                        ${part.category || 'Uncategorized'}
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">${part.part_number}</h3>
+                    <p class="text-gray-600 text-sm mb-3">${description}</p>
+                    
+                    <div class="flex justify-between items-center mt-4">
+                        <span class="text-sm text-gray-500">
+                            ${part.catalog_type || 'No catalog'}
+                        </span>
+                        <span class="text-blue-600 text-sm font-medium">
+                            View Details →
+                        </span>
+                    </div>
+                </div>
+            `;
+        } else {
+            // List view
+            card.innerHTML = `
+                <div class="w-32 flex-shrink-0">
+                    ${hasImage 
+                        ? `<img src="${imageUrl}" alt="${part.part_number}" 
+                            class="w-full h-32 object-cover" 
+                            onerror="this.style.display='none'; this.parentNode.querySelector('.image-placeholder').style.display='flex';"
+                            onload="this.style.display='block'; this.parentNode.querySelector('.image-placeholder').style.display='none';">`
+                        : ''
+                    }
+                    <div class="image-placeholder w-full h-32 ${hasImage ? 'hidden' : 'flex'} items-center justify-center">
+                        <i class="fas fa-image text-2xl text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex-1 p-4">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-bold text-lg text-gray-800 mb-2">${part.part_number}</h3>
+                            <p class="text-gray-600 mb-3">${description}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                                ${part.category || 'Uncategorized'}
+                            </span>
+                            <div class="text-sm text-gray-500 mt-2">
+                                ${part.catalog_type || 'No catalog'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        return card;
+    }
+
+    async showPartDetailPage(partId) {
+        try {
+            const response = await fetch(`/api/parts/${partId}`);
+            const part = await response.json();
+            this.currentPart = part;
+            this.displayPartDetail(part);
+            
+            // Update URL and history
+            history.pushState({ page: 'detail', partId: partId }, '', `/part/${partId}`);
+            
+        } catch (error) {
+            console.error('Failed to load part details:', error);
+            this.showError('Failed to load part details');
+        }
+    }
+
+    displayPartDetail(part) {
+        // Switch to detail page
+        document.getElementById('home-page').classList.add('hidden');
+        document.getElementById('part-detail-page').classList.remove('hidden');
+
+        // Set header information
+        document.getElementById('part-number-header').textContent = part.part_number;
+        document.getElementById('part-description-header').textContent = part.description || '';
+
+        // Set all content sections
+        this.setIntroductionContent(part);
+        this.setUseContent(part);
+        this.setSpecificationsContent(part);
+        this.setCrossReferences(part);
+        this.setDiagramContent(part);
+        this.setVideoContent(part);
+        this.setProductImage(part);
+        this.setManufacturerInfo(part);
+        this.setMaterialInfo(part);
+        this.setGeneralInfo(part);
+        this.setActionLinks(part);
+
+        // Load related parts
+        this.loadRelatedParts(part);
+    }
+
+    setIntroductionContent(part) {
+        const introContainer = document.getElementById('intro-content');
+        
+        let introHTML = '';
+        
+        if (part.description) {
+            introHTML += `<p class="text-gray-700 leading-relaxed">${part.description}</p>`;
+        }
+        
+        if (part.features) {
+            introHTML += `
+                <div class="mt-4">
+                    <h4 class="font-semibold text-gray-800 mb-2">Key Features:</h4>
+                    <p class="text-gray-700">${part.features}</p>
+                </div>
+            `;
+        }
+
+        introContainer.innerHTML = introHTML || '<p class="text-gray-500 italic">No introduction content available.</p>';
+    }
+
+    setUseContent(part) {
+        const useContainer = document.getElementById('use-content');
+        
+        let useHTML = '';
+        
+        if (part.applications && part.applications.length > 0) {
+            useHTML += `
+                <div class="mb-4">
+                    <h4 class="font-semibold text-gray-800 mb-2">Primary Applications:</h4>
+                    <div class="flex flex-wrap gap-2">
+                        ${part.applications.map(app => 
+                            `<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">${app}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        if (part.machine_info) {
+            useHTML += `
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">Compatible Machinery:</h4>
+                    <p class="text-gray-700">${part.machine_info}</p>
+                </div>
+            `;
+        }
+
+        useContainer.innerHTML = useHTML || '<p class="text-gray-500 italic">No usage information available.</p>';
+    }
+
+    setSpecificationsContent(part) {
+        const specsContainer = document.getElementById('specifications-content');
+        
+        let specsHTML = '';
+        
+        const specData = [
+            { label: 'Part Number', value: part.part_number },
+            { label: 'Category', value: part.category },
+            { label: 'Part Type', value: part.part_type },
+            { label: 'Catalog Type', value: part.catalog_type },
+            { label: 'Page Reference', value: part.page }
+        ];
+
+        specData.forEach(spec => {
+            if (spec.value) {
+                specsHTML += `
+                    <div class="spec-item">
+                        <span class="spec-label">${spec.label}:</span>
+                        <span class="spec-value">${spec.value}</span>
+                    </div>
+                `;
+            }
+        });
+
+        // Add specifications from the specifications field if available
+        if (part.specifications) {
+            try {
+                const additionalSpecs = typeof part.specifications === 'string' 
+                    ? JSON.parse(part.specifications) 
+                    : part.specifications;
+                
+                if (typeof additionalSpecs === 'object') {
+                    Object.entries(additionalSpecs).forEach(([key, value]) => {
+                        specsHTML += `
+                            <div class="spec-item">
+                                <span class="spec-label">${key}:</span>
+                                <span class="spec-value">${value}</span>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (e) {
+                // If not JSON, treat as text
+                specsHTML += `
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <p class="text-gray-700">${part.specifications}</p>
+                    </div>
+                `;
             }
         }
-    } catch (error) {
-        console.error('Error searching guides:', error);
+
+        specsContainer.innerHTML = specsHTML || '<p class="text-gray-500 italic">No specifications available.</p>';
     }
-}
 
-// Update displayResults to include guide listeners
-displayResults(data) {
-    const container = document.getElementById('results');
-    if (!container) return;
+    setCrossReferences(part) {
+        const crossRefContainer = document.getElementById('cross-reference-table');
+        
+        let crossRefHTML = '';
+        
+        if (part.oe_numbers) {
+            const oeNumbers = typeof part.oe_numbers === 'string' ? 
+                part.oe_numbers.split(';') : 
+                (Array.isArray(part.oe_numbers) ? part.oe_numbers : []);
+            
+            oeNumbers.forEach((oeNumber, index) => {
+                if (oeNumber.trim()) {
+                    crossRefHTML += `
+                        <tr class="cross-ref-table">
+                            <td class="px-4 py-2 text-sm text-gray-700">OEM ${index + 1}</td>
+                            <td class="px-4 py-2 text-sm font-medium text-gray-900">${oeNumber.trim()}</td>
+                            <td class="px-4 py-2 text-sm text-gray-700">${part.part_number} Alias</td>
+                            <td class="px-4 py-2 text-sm text-gray-700">Compatible with multiple vehicles</td>
+                        </tr>
+                    `;
+                }
+            });
+        }
 
-    if (!data || !data.results || data.results.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-search fa-3x"></i>
-                <h3>No results found</h3>
-                <p>Try adjusting your search criteria</p>
+        // Add current part as primary reference
+        crossRefHTML = `
+            <tr class="cross-ref-table bg-blue-50">
+                <td class="px-4 py-2 text-sm font-medium text-gray-900">Primary</td>
+                <td class="px-4 py-2 text-sm font-medium text-gray-900">${part.part_number}</td>
+                <td class="px-4 py-2 text-sm text-gray-700">Main Part</td>
+                <td class="px-4 py-2 text-sm text-gray-700">All compatible applications</td>
+            </tr>
+        ` + crossRefHTML;
+
+        crossRefContainer.innerHTML = crossRefHTML || '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">No cross references available.</td></tr>';
+    }
+
+    setDiagramContent(part) {
+        const diagramContainer = document.getElementById('diagram-content');
+        
+        // Use the part image as diagram if available
+        if (part.image_url) {
+            diagramContainer.innerHTML = `
+                <img src="${part.image_url}" alt="${part.part_number} Diagram" class="max-w-full h-auto mx-auto rounded-lg shadow-md">
+                <p class="text-sm text-gray-600 mt-2">Product diagram for ${part.part_number}</p>
+            `;
+        } else {
+            diagramContainer.innerHTML = `
+                <div class="image-placeholder w-full h-48 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-project-diagram text-4xl"></i>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">No diagram available for ${part.part_number}</p>
+            `;
+        }
+    }
+
+    setVideoContent(part) {
+        const videoContainer = document.getElementById('video-content');
+        videoContainer.innerHTML = `
+            <div class="image-placeholder w-full h-64 rounded-lg flex items-center justify-center">
+                <i class="fas fa-video text-4xl"></i>
+            </div>
+            <p class="text-sm text-gray-600 mt-2">Installation video coming soon for ${part.part_number}</p>
+        `;
+    }
+
+    setProductImage(part) {
+        const imagePlaceholder = document.getElementById('product-image-placeholder');
+        const productImage = document.getElementById('product-image');
+        
+        if (part.image_url) {
+            productImage.src = part.image_url;
+            productImage.alt = part.part_number;
+            productImage.classList.remove('hidden');
+            imagePlaceholder.classList.add('hidden');
+        } else {
+            productImage.classList.add('hidden');
+            imagePlaceholder.classList.remove('hidden');
+        }
+    }
+
+    setManufacturerInfo(part) {
+        const manufacturerContainer = document.getElementById('manufacturer-info');
+        manufacturerContainer.innerHTML = part.catalog_type 
+            ? `<p>${part.catalog_type}</p>`
+            : '<p class="text-gray-500 italic">Not specified</p>';
+    }
+
+    setMaterialInfo(part) {
+        const materialContainer = document.getElementById('material-info');
+        // Extract material from description or use default
+        const material = this.extractMaterial(part.description) || 'Various materials';
+        materialContainer.innerHTML = `<p>${material}</p>`;
+    }
+
+    setGeneralInfo(part) {
+        const generalContainer = document.getElementById('general-info');
+        
+        let infoHTML = '';
+        
+        if (part.category) {
+            infoHTML += `<div><strong>Category:</strong> ${part.category}</div>`;
+        }
+        
+        if (part.part_type) {
+            infoHTML += `<div><strong>Type:</strong> ${part.part_type}</div>`;
+        }
+        
+        if (part.page) {
+            infoHTML += `<div><strong>Catalog Page:</strong> ${part.page}</div>`;
+        }
+
+        generalContainer.innerHTML = infoHTML || '<div class="text-gray-500 italic">No general information available</div>';
+    }
+
+    setActionLinks(part) {
+        const pdfLink = document.getElementById('pdf-link');
+        const techGuideLink = document.getElementById('technical-guide-link');
+        const pageNumber = document.getElementById('part-page-number');
+
+        if (part.pdf_url) {
+            pdfLink.href = part.pdf_url;
+            pdfLink.classList.remove('hidden');
+        } else {
+            pdfLink.classList.add('hidden');
+        }
+
+        // Set page number
+        pageNumber.textContent = part.page || 'N/A';
+
+        // Technical guide link - you can implement this based on your technical_guides table
+        techGuideLink.href = '#';
+        techGuideLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showTechnicalGuide(part);
+        });
+    }
+
+    extractMaterial(description) {
+        if (!description) return null;
+        
+        const materialKeywords = ['steel', 'aluminum', 'plastic', 'rubber', 'brass', 'copper', 'nylon', 'composite'];
+        const descLower = description.toLowerCase();
+        
+        for (const material of materialKeywords) {
+            if (descLower.includes(material)) {
+                return material.charAt(0).toUpperCase() + material.slice(1);
+            }
+        }
+        
+        return null;
+    }
+
+    async loadRelatedParts(part) {
+        try {
+            // Search for related parts by category or catalog
+            const params = new URLSearchParams({
+                category: part.category || '',
+                catalog_type: part.catalog_type || '',
+                limit: 8
+            });
+
+            const response = await fetch(`/search?${params}`);
+            const data = await response.json();
+            
+            const relatedParts = data.results
+                .filter(p => p.id !== part.id)
+                .slice(0, 6); // Show max 6 related parts
+            
+            this.displayRelatedParts(relatedParts);
+            
+        } catch (error) {
+            console.error('Failed to load related parts:', error);
+        }
+    }
+
+    displayRelatedParts(parts) {
+        const container = document.getElementById('related-parts-list');
+        
+        if (parts.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-sm italic">No related parts found.</p>';
+            return;
+        }
+
+        let html = '';
+        parts.forEach(part => {
+            html += `
+                <div class="related-part-card fade-in" onclick="catalog.showPartDetailPage(${part.id})">
+                    <div class="font-medium text-gray-800 text-sm">${part.part_number}</div>
+                    <div class="text-gray-600 text-xs mt-1 truncate">${part.description || 'No description'}</div>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-xs text-gray-500">${part.category || ''}</span>
+                        <span class="text-blue-600 text-xs">View →</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    showTechnicalGuide(part) {
+        // Implement technical guide display
+        this.showError('Technical guide feature will be implemented soon');
+    }
+
+    showHomePage() {
+        document.getElementById('part-detail-page').classList.add('hidden');
+        document.getElementById('home-page').classList.remove('hidden');
+        history.pushState({ page: 'home' }, '', '/');
+    }
+
+    showLoading() {
+        document.getElementById('loadingSpinner').classList.remove('hidden');
+        document.getElementById('resultsGrid').classList.add('opacity-50');
+    }
+
+    hideLoading() {
+        document.getElementById('loadingSpinner').classList.add('hidden');
+        document.getElementById('resultsGrid').classList.remove('opacity-50');
+    }
+
+    showError(message) {
+        // Simple error display - you can enhance this with a proper toast/notification
+        alert(message);
+    }
+
+    async showTechnicalGuide(part) {
+        try {
+            const response = await fetch(`/api/parts/${part.id}/guides`);
+            const data = await response.json();
+            
+            if (data.guides && data.guides.length > 0) {
+                this.displayTechnicalGuides(data.guides, part);
+            } else {
+                this.showError('No technical guides available for this part');
+            }
+        } catch (error) {
+            console.error('Failed to load technical guides:', error);
+            this.showError('Failed to load technical guides');
+        }
+    }
+
+    displayTechnicalGuides(guides, part) {
+        // Create a modal or section to display guides
+        const guideHTML = `
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg p-6 max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold">Technical Guides for ${part.part_number}</h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        ${guides.map(guide => `
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-semibold text-lg">${guide.display_name}</h4>
+                                <p class="text-gray-600 mt-2">${guide.description || 'No description available'}</p>
+                                
+                                ${guide.sections && guide.sections.length > 0 ? `
+                                    <div class="mt-3">
+                                        <h5 class="font-medium">Sections:</h5>
+                                        <ul class="list-disc list-inside mt-1">
+                                            ${guide.sections.map(section => `
+                                                <li class="text-sm">${section.title}</li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
+                                
+                                ${guide.key_specifications && Object.keys(guide.key_specifications).length > 0 ? `
+                                    <div class="mt-3">
+                                        <h5 class="font-medium">Key Specifications:</h5>
+                                        <div class="grid grid-cols-2 gap-2 mt-1">
+                                            ${Object.entries(guide.key_specifications).map(([key, value]) => `
+                                                <div class="text-sm">
+                                                    <span class="font-medium">${key}:</span> ${value}
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                <div class="mt-3 flex justify-between items-center">
+                                    <span class="text-sm text-gray-500">Confidence: ${(guide.confidence_score * 100).toFixed(0)}%</span>
+                                    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+                                        View Full Guide
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
             </div>
         `;
-        return;
+        
+        document.body.insertAdjacentHTML('beforeend', guideHTML);
     }
-
-    const isGridView = this.currentView === 'grid';
-    container.className = isGridView ? 'results-grid' : 'results-list';
-
-    container.innerHTML = data.results.map(part => this.createResultCard(part, isGridView)).join('');
-
-    // Add event listeners
-    this.addImageEventListeners();
-    this.addGuideEventListeners();
-    this.addCardEventListeners();
 }
 
-addImageEventListeners() {
-    document.querySelectorAll('.btn-image').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const card = e.target.closest('.part-card');
-            this.openImagePopup(card);
-        });
-    });
-}
-
-addCardEventListeners() {
-    document.querySelectorAll('.part-card').forEach(card => {
-        card.addEventListener('click', () => {
-            this.showPartDetails(card.dataset.partId);
-        });
-    });
-}
-
-  showPdfModal(title, pdfUrl) {
-    document.getElementById('pdfTitle').textContent = title;
-    document.getElementById('pdfViewer').src = pdfUrl;
-    document.getElementById('pdfModal').style.display = 'flex';
-  }
-
-  closePdfModal() {
-    document.getElementById('pdfModal').style.display = 'none';
-    document.getElementById('pdfViewer').src = '';
-  }
-
-  async showPartDetails(partId) {
-    // Implement part details view
-    console.log('Show details for part:', partId);
-  }
-
-  showAll() {
-    this.filters.q = '';
-    document.getElementById('q').value = '';
-    this.performSearch();
-  }
-
-  resetFilters() {
-    this.filters = {
-      q: '',
-      category: '',
-      part_type: '',
-      catalog_type: '',
-      content_type: 'all'
-    };
-    
-    document.getElementById('q').value = '';
-    document.getElementById('category').value = '';
-    document.getElementById('part_type').value = '';
-    document.getElementById('catalog_type').value = '';
-    document.getElementById('content_type').value = 'all';
-    
-    this.performSearch();
-  }
-
-  updateView() {
-    this.displayResults(this.lastResults || { results: [] });
-  }
-
-  updateBreadcrumb() {
-    const breadcrumb = document.getElementById('breadcrumb');
-    if (!breadcrumb) return;
-    const activeFilters = Object.entries(this.filters)
-      .filter(([key, value]) => value && key !== 'content_type')
-      .map(([key, value]) => `${key}: ${value}`);
-    
-    breadcrumb.textContent = activeFilters.length > 0 
-      ? `Search Results (${activeFilters.join(', ')})`
-      : 'All Content';
-  }
-
-  setLoadingState(loading) {
-    const btn = document.getElementById('searchBtn');
-    if (!btn) return;
-    if (loading) {
-      btn.innerHTML = '<div class="spinner"></div>';
-      btn.disabled = true;
-      document.body.classList.add('loading');
-    } else {
-      btn.innerHTML = '<i class="fas fa-search"></i> Search';
-      btn.disabled = false;
-      document.body.classList.remove('loading');
-    }
-  }
-
-  displayError(message) {
-    const container = document.getElementById('results');
-    if (!container) return;
-    container.innerHTML = `
-      <div class="error-state">
-        <i class="fas fa-exclamation-triangle fa-2x"></i>
-        <h3>${message}</h3>
-      </div>
-    `;
-  }
-}
-
-// Initialize the app when DOM is loaded
+// Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-  new KnowledgeBaseApp();
+    window.catalog = new PartsCatalog();
+    
+    // Handle direct part page access from URL
+    const pathParts = window.location.pathname.split('/');
+    if (pathParts[1] === 'part' && pathParts[2]) {
+        const partId = parseInt(pathParts[2]);
+        if (!isNaN(partId)) {
+            window.catalog.showPartDetailPage(partId);
+        }
+    }
 });
+async showTechnicalGuide(part) {
+    try {
+        const response = await fetch(`/api/parts/${part.id}/guides`);
+        const data = await response.json();
+        
+        if (data.guides && data.guides.length > 0) {
+            this.displayTechnicalGuides(data.guides, part);
+        } else {
+            this.showError('No technical guides available for this part');
+        }
+    } catch (error) {
+        console.error('Failed to load technical guides:', error);
+        this.showError('Failed to load technical guides');
+    }
+}
+
+displayTechnicalGuides(guides, part) {
+    // Create a modal or section to display guides
+    const guideHTML = `
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 max-w-4xl max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">Technical Guides for ${part.part_number}</h3>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    ${guides.map(guide => `
+                        <div class="border rounded-lg p-4">
+                            <h4 class="font-semibold text-lg">${guide.display_name}</h4>
+                            <p class="text-gray-600 mt-2">${guide.description || 'No description available'}</p>
+                            
+                            ${guide.sections && guide.sections.length > 0 ? `
+                                <div class="mt-3">
+                                    <h5 class="font-medium">Sections:</h5>
+                                    <ul class="list-disc list-inside mt-1">
+                                        ${guide.sections.map(section => `
+                                            <li class="text-sm">${section.title}</li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                            
+                            ${guide.key_specifications && Object.keys(guide.key_specifications).length > 0 ? `
+                                <div class="mt-3">
+                                    <h5 class="font-medium">Key Specifications:</h5>
+                                    <div class="grid grid-cols-2 gap-2 mt-1">
+                                        ${Object.entries(guide.key_specifications).map(([key, value]) => `
+                                            <div class="text-sm">
+                                                <span class="font-medium">${key}:</span> ${value}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="mt-3 flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Confidence: ${(guide.confidence_score * 100).toFixed(0)}%</span>
+                                <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+                                    View Full Guide
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', guideHTML);
+}

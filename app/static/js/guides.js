@@ -20,6 +20,11 @@ export class KnowledgeBaseGuides {
   }
 }
 
+export function searchTechnicalGuides(app, category) {
+  const guides = new KnowledgeBaseGuides(app);
+  return guides.searchTechnicalGuides(category);
+}
+
 export function displayTechnicalGuides(app, guides) {
   const container = document.getElementById('guidesList');
   if (!container) return;

@@ -5,20 +5,24 @@ Batch process all PDFs in a directory
 import sys
 from pathlib import Path
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# EXACT PATH: This script is in app/scripts/
+script_dir = Path(__file__).parent  # app/scripts/
+app_dir = script_dir.parent         # app/
+sys.path.insert(0, str(app_dir))
 
-from app.services.pdf_processing.extract_catalog import CatalogExtractor
-from app.services.pdf_processing.extract_guides import GuideExtractor
-from app.services.db.queries import DatabaseManager
-from app.utils.logger import setup_logging
+from services.pdf_processing.extract_catalog import CatalogExtractor
+from services.pdf_processing.extract_guides import GuideExtractor
+from services.db.queries import DatabaseManager
+from utils.logger import setup_logging
 
 logger = setup_logging()
 
 def process_pdf_catalogs():
     """Process all catalog PDFs"""
-    pdf_directory = Path("app/data/pdfs")
-    output_image_dir = Path("app/data/page_images")
+    # Use correct paths relative to app directory
+    data_dir = app_dir / "data"
+    pdf_directory = data_dir / "pdfs"
+    output_image_dir = data_dir / "page_images"
     
     if not pdf_directory.exists():
         logger.error(f"PDF directory not found: {pdf_directory}")
@@ -60,7 +64,8 @@ def process_pdf_catalogs():
 
 def process_technical_guides():
     """Process technical guides"""
-    guides_directory = Path("app/data/guides")
+    data_dir = app_dir / "data"
+    guides_directory = data_dir / "guides"
     
     if not guides_directory.exists():
         logger.info(f"Guides directory not found: {guides_directory}")

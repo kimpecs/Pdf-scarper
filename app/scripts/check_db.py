@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 
-DB_PATH = Path(r"C:\Users\kpecco\Desktop\codes\TESTING\data\catalog.db")
+DB_PATH = Path(r"C:\Users\kpecco\Desktop\codes\TESTING\app\data\catalog.db")
 
 def print_header(title):
     print(f"\n{'='*60}")

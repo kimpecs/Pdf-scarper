@@ -40,7 +40,7 @@ def main():
         from app.main import app
         from app.utils.config import settings
 
-        # Step 4 — Display startup diagnostics
+        # Step 3 — Display startup diagnostics
         print("\n Starting Knowledge Base API server")
         print("────────────────────────────────────────────")
         print(f"Frontend URL:        http://localhost:8000")
@@ -50,12 +50,12 @@ def main():
         print("────────────────────────────────────────────")
         print("Press Ctrl+C to stop the server\n")
 
-        # Step 5 — Start Uvicorn
+        # Step 4 — Start Uvicorn
         uvicorn.run(
             "app.main:app",
             host="0.0.0.0",
             port=8000,
-            reload=True,
+            reload=False,
             log_level="info"
         )
 

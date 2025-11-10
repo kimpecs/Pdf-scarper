@@ -2,21 +2,29 @@ import sqlite3
 import json
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from app.utils.config import settings
-from app.utils.logger import setup_logging
+import sys
+
+# EXACT PATH: This file is in app/services/db/
+script_dir = Path(__file__).parent  # app/services/db/
+services_dir = script_dir.parent    # app/services/
+app_dir = services_dir.parent       # app/
+sys.path.insert(0, str(app_dir))
+
+from utils.config import settings
+from utils.logger import setup_logging
 
 logger = setup_logging()
 
 class DatabaseManager:
     def __init__(self):
         # Get DB path string from environment variable
-        db_path_str = settings.DATABASE_URL.replace("sqlite:///", "").strip()
+        self.db_path = Path(r"C:\Users\kpecco\Desktop\codes\TESTING\app\data\catalog.db")
+        logger.info(f"Using database at: {self.db_path}")
 
-        # Resolve relative to the project root (not CWD)
-        project_root = Path(__file__).resolve().parents[3]  
-        db_path = Path(db_path_str)
+        # Resolve relative to the app directory
+        db_path = Path(r"C:\Users\kpecco\Desktop\codes\TESTING\app\data\catalog.db")
         if not db_path.is_absolute():
-            db_path = (project_root / db_path).resolve()
+            db_path = (app_dir / db_path).resolve()
 
         # Ensure directory exists
         db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -48,10 +56,11 @@ class DatabaseManager:
                 sql += " AND part_number LIKE ?"
                 params.append(f"{query}%")
             else:
+                # FIX: Use proper FTS syntax
                 sql += """ AND id IN (
                     SELECT rowid FROM parts_fts WHERE parts_fts MATCH ?
                 )"""
-                params.append(query)
+                params.append(f"{query}*")
         
         if category:
             sql += " AND category = ?"

@@ -2,47 +2,30 @@ import sys
 from pathlib import Path
 import sqlite3
 
-# Add project root to sys.path so 'app' package is discoverable
-project_root = Path(__file__).resolve().parents[3]
-sys.path.append(str(project_root))
+# Add project root to Python path
+project_root = Path(__file__).resolve().parent.parent  # Points to app/ directory
+sys.path.insert(0, str(project_root))
 
-from app.utils.config import settings
-from app.utils.logger import setup_logging
-
-logger = setup_logging()
-
-def init_database():
-    """Initialize database using internal app packages and enhanced schema"""
+def setup_database():
+    """Initialize database without importing app modules"""
     
-    # Determine DB path from settings - FIXED PATH RESOLUTION
-    db_url = getattr(settings, 'DATABASE_URL', 'sqlite:///knowledge_base.db')
+    # FIXED: Use the correct database path that matches your config
+    db_path = project_root / "data" / "catalog.db"  # This matches what your PDF processing expects
+    data_dir = project_root / "data"
+    images_dir = data_dir / "page_images"
+    pdf_dir = data_dir / "pdfs"
+    guides_dir = data_dir / "guides"
     
-    if db_url.startswith('sqlite:///'):
-        db_path = db_url.replace('sqlite:///', '')
-        # Make path absolute relative to project root
-        db_path = project_root / db_path
-    else:
-        # Fallback to default location
-        db_path = project_root / 'knowledge_base.db'
-    
-    # Create parent directories if they don't exist
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    # Create data directories
-    data_dir = project_root / 'data'
-    images_dir = data_dir / 'page_images'
-    pdf_dir = data_dir / 'pdfs'
-    guides_dir = data_dir / 'guides'
-    
+    # Create directories
     for directory in [data_dir, images_dir, pdf_dir, guides_dir]:
         directory.mkdir(parents=True, exist_ok=True)
 
     # Delete existing DB if it exists
     if db_path.exists():
         db_path.unlink()
-        logger.info(f"Deleted existing database at {db_path}")
+        print(f"Deleted existing database at {db_path}")
 
-    logger.info(f"Creating database at: {db_path}")
+    print(f"Creating database at: {db_path}")
 
     try:
         # Connect to SQLite
@@ -137,12 +120,12 @@ def init_database():
 
         conn.commit()
         conn.close()
-        logger.info(f"Database setup complete at {db_path}")
-        logger.info(f"Data directories created at: {data_dir.resolve()}")
+        print(f"Database setup complete at {db_path}")
+        print(f"Data directories created at: {data_dir}")
         
     except Exception as e:
-        logger.error(f"Database setup failed: {e}")
+        print(f"Database setup failed: {e}")
         raise
 
 if __name__ == "__main__":
-    init_database()
+    setup_database()

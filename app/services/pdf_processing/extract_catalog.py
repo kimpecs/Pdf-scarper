@@ -6,12 +6,14 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 import sys
 
-# Add the project root to Python path for absolute imports
-project_root = Path(__file__).parent.parent.parent.parent
-sys.path.insert(0, str(project_root))
+# EXACT PATH: This file is in app/services/pdf_processing/
+script_dir = Path(__file__).parent  # app/services/pdf_processing/
+services_dir = script_dir.parent    # app/services/
+app_dir = services_dir.parent       # app/
+sys.path.insert(0, str(app_dir))
 
-from app.utils.logger import setup_logging
-from app.utils.constants import PART_NUMBER_PATTERNS, MACHINE_PATTERNS, CATALOG_INDICATORS
+from utils.logger import setup_logging
+from utils.constants import PART_NUMBER_PATTERNS, MACHINE_PATTERNS, CATALOG_INDICATORS
 
 logger = setup_logging()
 
@@ -56,10 +58,11 @@ class CatalogExtractor:
                                 'part_type': part['type'],
                                 'description': part.get('context', ''),
                                 'page': page_num,
-                                'page_text': text[:1000],  # Store first 1000 chars
+                                'page_text': text[:10000],  
                                 'pdf_path': f"{pdf_name}.pdf",
                                 'category': self._infer_category(part['context']),
-                                'machine_info': json.dumps(machine_info) if machine_info else None
+                                'machine_info': json.dumps(machine_info) if machine_info else None,
+                                'image_path': None  # Initialize as None
                             }
                             catalog_data.append(part_data)
                             
@@ -190,49 +193,56 @@ class CatalogExtractor:
             
             success_count = 0
             error_count = 0
+            clean_pdf_name = re.sub(r'[^\w\-_]', '_', pdf_name)
             
-            for page_num in range(min(len(doc), 100)):  # Limit to first 100 pages for performance
+            for page_num in range(len(doc)):  # Fixed: removed min() - just use range(len(doc))
                 page = doc.load_page(page_num)
                 image_list = page.get_images()
-                
+                page_parts = [p for p in catalog_data if p['page'] == page_num + 1]
+               
                 for img_index, img in enumerate(image_list):
                     try:
                         xref = img[0]
-                        
-                        # Use extract_image which handles more formats
                         img_dict = doc.extract_image(xref)
                         if not img_dict:
                             error_count += 1
                             continue
                         
                         img_data = img_dict["image"]
-                        img_ext = img_dict["ext"]
+                        img_ext = img_dict["ext"].lower()  # Convert to lowercase for consistent checking
                         
-                        # Only save PNG and JPEG images
-                        if img_ext.lower() not in ['png', 'jpg', 'jpeg']:
+                        # Only save common image formats
+                        if img_ext not in ['png', 'jpg', 'jpeg']:
                             error_count += 1
                             continue
                         
-                        # Save image
-                        img_filename = f"{pdf_name}_p{page_num+1}_img{img_index:03d}.{img_ext}"
+                        # Save image with simpler filename
+                        img_filename = f"{clean_pdf_name}_page{page_num+1}_img{img_index:02d}.{img_ext}"
                         img_path = output_path / img_filename
                         
                         with open(img_path, "wb") as f:
                             f.write(img_data)
                         
-                        # Associate with parts
-                        for part in catalog_data:
-                            if part['page'] == page_num + 1 and not part.get('image_path'):
-                                part['image_path'] = str(img_path)
+                        # Associate with parts on this page - store just filename, not full path
+                        for part in page_parts:
+                            if not part.get('image_path'):
+                                part['image_path'] = img_filename
+                                logger.info(f"Associated image {img_filename} with part {part['part_number']} on page {page_num + 1}")
                                 break
+                        else:
+                            # If no parts on this page, associate with first part we found
+                            if catalog_data and not catalog_data[0].get('image_path'):
+                                catalog_data[0]['image_path'] = img_filename
+                                logger.info(f"Associated image {img_filename} with part {catalog_data[0]['part_number']} (fallback)")
                         
                         success_count += 1
                         
                     except Exception as e:
+                        logger.warning(f"Error extracting image {img_index} from page {page_num}: {e}")
                         error_count += 1
                         continue
             
-            logger.info(f"Images: {success_count} extracted, {error_count} failed for {pdf_name}")
+            logger.info(f"Successfully extracted {success_count} images, {error_count} failed for {pdf_name}")
             doc.close()
             
         except Exception as e:

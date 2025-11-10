@@ -1,5 +1,12 @@
 import { performSearch } from './search.js';
-import { searchTechnicalGuides } from './guides.js';
+
+function searchTechnicalGuides(app, category) {
+  const guides = app.guides;
+  if (guides && guides.searchTechnicalGuides) {
+    return guides.searchTechnicalGuides(category);
+  }
+  console.warn('Technical guides not available');
+}
 
 export function bindUIEvents(app) {
   const q = document.getElementById('q');
@@ -22,6 +29,16 @@ export function bindUIEvents(app) {
     app.filters.q = e.target.value;
     clearTimeout(t);
     t = setTimeout(() => performSearch(app), app.config.searchDebounceMs);
+  });
+
+  // Add guide button event delegation
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.btn-guide')) {
+      const category = e.target.closest('.btn-guide').dataset.category;
+      if (category) {
+        searchTechnicalGuides(app, category);
+      }
+    }
   });
 }
 
