@@ -41,3 +41,23 @@ class PDFImageConverter:
         except Exception as e:
             logger.error(f"Image conversion failed: {e}")
             return []
+        
+    def process_and_upload_guide(self, pdf_path: str, upload_to_s3: bool = False) -> Dict[str, Any]:
+        """Process guide and optionally upload to S3"""
+        guide_data = self.process_guide_pdf(pdf_path)
+        
+        if upload_to_s3:
+            try:
+                from app.services.storage.file_service import FileService
+                file_service = FileService()
+                
+                # Upload PDF to S3
+                s3_key = file_service.upload_pdf_to_s3(pdf_path, "guides")
+                if s3_key:
+                    logger.info(f"Uploaded guide to S3: {s3_key}")
+                    guide_data['s3_pdf_url'] = file_service.get_pdf_url(s3_key)
+                    
+            except Exception as e:
+                logger.error(f"Error uploading guide to S3: {e}")
+        
+        return guide_data

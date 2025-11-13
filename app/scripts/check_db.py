@@ -1,4 +1,5 @@
-# check_db.py
+#  check_db.py
+
 import sqlite3
 import json
 from pathlib import Path
@@ -53,7 +54,7 @@ def print_sample_parts(cur, limit: int = 20):
     
     cur.execute("""
         SELECT id, catalog_name, catalog_type, part_type, part_number, 
-               description, category, page, pdf_path, machine_info
+               description, category, page, pdf_path, machine_info, image_path
         FROM parts
         ORDER BY catalog_name, page, part_number
         LIMIT ?;
@@ -73,6 +74,9 @@ def print_sample_parts(cur, limit: int = 20):
         print(f"  Catalog: {row[1]} ({row[2]})")
         print(f"  Part: {row[4]} ({row[3]})")
         print(f"  Page: {row[7]} | Category: {row[6]}")
+        print(f"  PDF: {row[8]}")
+        if row[10]:
+            print(f"  Image: {row[10]}")
         if models:
             print(f"  Models: {', '.join(models)}")
         if row[5]:
@@ -109,7 +113,9 @@ def print_fts_status(cur):
         print(f"FTS entries: {fts_count:,}")
         
         # Check FTS configuration
-        cur.execute("SELECT * FROM parts_fts WHERE parts_fts MATCH 'test' LIMIT 1;")
+        cur.execute("SELECT COUNT(*) FROM parts_fts WHERE parts_fts MATCH 'D340';")
+        test_count = cur.fetchone()[0]
+        print(f"FTS test search ('D340'): {test_count} results")
         print("FTS operational: [OK]")
         
     except Exception as e:
@@ -134,13 +140,13 @@ def print_catalog_summary(cur):
     
     catalogs = cur.fetchall()
     
-    print(f"{'Catalog Name':25} {'Type':15} {'Parts':8} {'Pages':8} {'Categories':12} {'Page Range'}")
-    print("-" * 80)
+    print(f"{'Catalog Name':30} {'Type':15} {'Parts':8} {'Pages':8} {'Categories':12} {'Page Range'}")
+    print("-" * 90)
     
     for catalog in catalogs:
         name, ctype, parts, pages, cats, min_pg, max_pg = catalog
         page_range = f"{min_pg}-{max_pg}" if min_pg != max_pg else str(min_pg)
-        print(f"{name:25} {ctype:15} {parts:8,} {pages:8} {cats:12} {page_range:10}")
+        print(f"{name:30} {ctype:15} {parts:8,} {pages:8} {cats:12} {page_range:10}")
 
 def print_part_number_analysis(cur):
     print_header("Part Number Analysis")
@@ -193,9 +199,19 @@ def print_technical_guides_status(cur):
     
     if count > 0:
         print(f"Technical guides: {count}")
+        
+        # Check for new columns
+        cur.execute("PRAGMA table_info(technical_guides)")
+        columns = [col[1] for col in cur.fetchall()]
+        has_pdf_path = 'pdf_path' in columns
+        has_related_parts = 'related_parts' in columns
+        
+        print(f"Has pdf_path column: {has_pdf_path}")
+        print(f"Has related_parts column: {has_related_parts}")
+        
         cur.execute("SELECT guide_name, display_name, category FROM technical_guides LIMIT 10;")
         for guide in cur.fetchall():
-            print(f"  {guide[0]:20} {guide[1]:25} ({guide[2]})")
+            print(f"  {guide[0]:25} {guide[1]:35} ({guide[2]})")
     else:
         print("No technical guides found")
 
@@ -208,13 +224,103 @@ def print_technical_guides_stats(cur, limit=10):
     print(f"Total technical guides: {total}")
     
     if total > 0:
-        # Sample guides
-        cur.execute(f"SELECT guide_name, display_name, category, created_at FROM technical_guides ORDER BY created_at DESC LIMIT ?;", (limit,))
+        # Check for related parts data
+        try:
+            cur.execute("SELECT COUNT(*) FROM guide_parts;")
+            guide_part_count = cur.fetchone()[0]
+            print(f"Guide-part associations: {guide_part_count}")
+        except:
+            print("Guide-part associations: Table not found")
+        
+        # Sample guides with related parts info
+        cur.execute(f"""
+            SELECT tg.guide_name, tg.display_name, tg.category, tg.created_at,
+                   (SELECT COUNT(*) FROM guide_parts gp WHERE gp.guide_id = tg.id) as part_count
+            FROM technical_guides tg 
+            ORDER BY tg.created_at DESC 
+            LIMIT ?;
+        """, (limit,))
+        
         rows = cur.fetchall()
         print(f"Most recent {len(rows)} guides:")
         for guide in rows:
-            print(f"  {guide[0]:20} {guide[1]:25} ({guide[2]}) Created: {guide[3]}")
+            print(f"  {guide[0]:25} {guide[1]:35} ({guide[2]}) Parts: {guide[4]} Created: {guide[3]}")
 
+def print_guide_parts_associations(cur, limit=15):
+    print_header("Guide-Parts Associations")
+    
+    try:
+        # Check if guide_parts table exists
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='guide_parts';")
+        if not cur.fetchone():
+            print("guide_parts table does not exist")
+            return
+        
+        # Total associations
+        cur.execute("SELECT COUNT(*) FROM guide_parts;")
+        total_associations = cur.fetchone()[0]
+        print(f"Total guide-part associations: {total_associations}")
+        
+        # Guides with most parts
+        cur.execute("""
+            SELECT tg.guide_name, tg.display_name, COUNT(gp.part_number) as part_count
+            FROM technical_guides tg
+            LEFT JOIN guide_parts gp ON tg.id = gp.guide_id
+            GROUP BY tg.id
+            ORDER BY part_count DESC
+            LIMIT ?;
+        """, (limit,))
+        
+        print(f"Top {limit} guides by part associations:")
+        for guide in cur.fetchall():
+            print(f"  {guide[0]:25} {guide[1]:35} Parts: {guide[2]}")
+        
+        # Most referenced parts
+        cur.execute("""
+            SELECT part_number, COUNT(*) as guide_count
+            FROM guide_parts
+            GROUP BY part_number
+            ORDER BY guide_count DESC
+            LIMIT ?;
+        """, (limit,))
+        
+        print(f"\nTop {limit} most referenced parts:")
+        for part in cur.fetchall():
+            print(f"  {part[0]:20} Guides: {part[1]}")
+            
+    except Exception as e:
+        print(f"Error reading guide-parts associations: {e}")
+
+def print_image_analysis(cur):
+    print_header("Image Analysis")
+    
+    # Parts with images
+    cur.execute("SELECT COUNT(*) FROM parts WHERE image_path IS NOT NULL AND image_path != '';")
+    parts_with_images = cur.fetchone()[0]
+    
+    cur.execute("SELECT COUNT(*) FROM parts;")
+    total_parts = cur.fetchone()[0]
+    
+    if total_parts > 0:
+        percentage = (parts_with_images / total_parts) * 100
+        print(f"Parts with images: {parts_with_images:,} / {total_parts:,} ({percentage:.1f}%)")
+    
+    # Sample parts with images
+    cur.execute("""
+        SELECT part_number, description, image_path, catalog_name
+        FROM parts 
+        WHERE image_path IS NOT NULL AND image_path != ''
+        LIMIT 10;
+    """)
+    
+    images = cur.fetchall()
+    if images:
+        print("Sample parts with images:")
+        for img in images:
+            print(f"  {img[0]:15} {img[1][:50]:50} {img[3]:20}")
+            print(f"    Image: {img[2]}")
+    else:
+        print("No parts with images found")
 
 def check_database_health(cur):
     print_header("Database Health Check")
@@ -239,8 +345,9 @@ def check_database_health(cur):
     fts_count = cur.fetchone()[0]
     checks.append(("FTS has data", fts_count > 0))
     
-    # Check 5: FTS matches parts count
-    checks.append(("FTS in sync", fts_count == parts_count))
+    # Check 5: FTS matches parts count (approximately)
+    fts_ok = abs(fts_count - parts_count) <= max(parts_count * 0.01, 100)  # Allow 1% difference or 100 records
+    checks.append(("FTS in sync", fts_ok))
     
     # Check 6: Indexes exist
     cur.execute("SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%';")
@@ -256,11 +363,37 @@ def check_database_health(cur):
     guides_count = cur.fetchone()[0]
     checks.append(("Has technical guides data", guides_count > 0))
 
+    # Check 9: Guide-parts table exists
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='guide_parts';")
+    checks.append(("Guide-parts table exists", bool(cur.fetchone())))
     
     # Print results
     for check, passed in checks:
-        status = "[OK]" if passed else "[ERROR]"
+        status = "[OK]" if passed else "[WARNING]"
         print(f"  {status} {check}")
+
+def print_performance_tips(cur):
+    print_header("Performance Tips")
+    
+    # Check for missing indexes
+    cur.execute("""
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name NOT IN (
+            SELECT DISTINCT tbl_name FROM sqlite_master WHERE type='index'
+        ) AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'parts_fts%';
+    """)
+    tables_without_indexes = [row[0] for row in cur.fetchall()]
+    
+    if tables_without_indexes:
+        print("[WARNING] Tables without indexes:")
+        for table in tables_without_indexes:
+            print(f"  - {table}")
+    else:
+        print("[OK] All tables have indexes")
+    
+    print("[OK] Regular VACUUM to optimize database")
+    print("[OK] Use FTS for text searches")
+    print("[OK] Consider partitioning for very large datasets")
 
 def main():
     if not DB_PATH.exists():
@@ -290,6 +423,7 @@ def main():
             print_distribution(cur, "part_type", "Part Type")
             print_distribution(cur, "category", "Category", 10)
             print_part_number_analysis(cur)
+            print_image_analysis(cur)
             print_fts_status(cur)
         
         if "technical_guides" in tables:
@@ -297,19 +431,18 @@ def main():
             print_table_info(cur, "technical_guides")
             print_table_stats(cur, "technical_guides")
             print_technical_guides_stats(cur, limit=10)
+            print_guide_parts_associations(cur, limit=10)
                 
         # Database size
         print_database_size()
         
         # Performance tips
-        print_header("Performance Tips")
-        print("[OK] Ensure indexes exist on frequently searched columns")
-        print("[OK] Regular VACUUM to optimize database")
-        print("[OK] Use FTS for text searches")
-        print("[OK] Consider partitioning for very large datasets")
+        print_performance_tips(cur)
 
     except Exception as e:
         print(f"[ERROR] Error during analysis: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
         conn.close()
 

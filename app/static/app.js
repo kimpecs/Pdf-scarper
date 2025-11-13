@@ -8,7 +8,7 @@ class PartsCatalog {
         };
         this.config = {};
         this.currentPart = null;
-        this.viewMode = 'grid'; // 'grid' or 'list'
+        this.viewMode = 'grid';
         this.init();
     }
 
@@ -18,9 +18,10 @@ class PartsCatalog {
         this.setupEventListeners();
         this.setupDetailPageListeners();
         this.setupViewMode();
-        this.performSearch(''); // Load initial results
+        this.setupEnhancedSearch();
+        this.performSearch(''); 
         
-        // Handle browser back/forward
+       
         window.addEventListener('popstate', (event) => {
             if (event.state && event.state.page === 'detail') {
                 this.showPartDetailPage(event.state.partId);
@@ -29,6 +30,68 @@ class PartsCatalog {
             }
         });
     }
+    setupEnhancedSearch() {
+            document.getElementById("searchBtn").addEventListener("click", async () => {
+                const query = document.getElementById("searchInput").value.trim();
+                if (!query) return;
+
+                document.getElementById("loadingSpinner").classList.remove("hidden");
+                document.getElementById("resultsGrid").innerHTML = "";
+
+                try {
+                    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+
+                    document.getElementById("loadingSpinner").classList.add("hidden");
+                    const resultsGrid = document.getElementById("resultsGrid");
+                    const resultsCount = document.getElementById("resultsCount");
+                    const resultsNumber = document.getElementById("resultsNumber");
+
+                    if (data.results.length === 0) {
+                        document.getElementById("noResults").classList.remove("hidden");
+                        resultsCount.classList.add("hidden");
+                        return;
+                    }
+
+                    resultsNumber.textContent = data.results.length;
+                    resultsCount.classList.remove("hidden");
+                    document.getElementById("noResults").classList.add("hidden");
+
+                    data.results.forEach(part => {
+                        const card = document.createElement("div");
+                        card.className = "bg-white rounded-lg shadow-md p-4 cursor-pointer";
+                        card.addEventListener('click', () => this.showPartDetailPage(part.id));
+                        
+                        card.innerHTML = `
+                            <h3 class="text-lg font-bold text-gray-800">${part.part_number}</h3>
+                            <p class="text-sm text-gray-600 mb-2">${part.description || "No description available"}</p>
+                            ${part.image_path ? `<img src="/page_images/${part.image_path}" class="w-full h-40 object-contain mb-2">` : ""}
+                            <p class="text-xs text-gray-500">Catalog: ${part.catalog_name}</p>
+                            <p class="text-xs text-gray-500 mb-2">Page: ${part.page}</p>
+                            ${part.guides?.length ? `
+                                <div class="mt-2">
+                                    <h4 class="font-semibold text-sm text-gray-700 mb-1">Technical Guides:</h4>
+                                    <ul class="space-y-1">
+                                        ${part.guides.map(g => `
+                                            <li>
+                                                <a href="/guides/${g.id}" class="text-blue-600 hover:underline text-sm" onclick="event.stopPropagation()">
+                                                    ${g.display_name}
+                                                </a>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            ` : ""}
+                        `;
+                        resultsGrid.appendChild(card);
+                    });
+                } catch (err) {
+                    console.error("Search error:", err);
+                    document.getElementById("loadingSpinner").classList.add("hidden");
+                    alert("Error fetching search results.");
+                }
+            });
+ }
 
     async loadConfig() {
         try {
@@ -175,17 +238,34 @@ class PartsCatalog {
         this.showLoading();
         
         try {
-            const params = new URLSearchParams({
-                q: query,
-                ...this.filters,
-                limit: this.config.maxSearchResults
-            });
-
-            const response = await fetch(`/search?${params}`);
+            // Check if we should use the enhanced search API or the regular one
+            const useEnhancedSearch = query.trim().length > 0 && 
+                                   document.getElementById("searchInput").value.trim() === query;
+            
+            let response;
+            if (useEnhancedSearch) {
+                // Use the enhanced search endpoint
+                response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            } else {
+                // Use the regular search with filters
+                const params = new URLSearchParams({
+                    q: query,
+                    ...this.filters,
+                    limit: this.config.maxSearchResults
+                });
+                response = await fetch(`/search?${params}`);
+            }
+            
             const data = await response.json();
             
             this.currentResults = data.results || [];
-            this.displayResults();
+            
+            // If using enhanced search, we need to handle the display differently
+            if (useEnhancedSearch) {
+                this.displayEnhancedResults(data.results);
+            } else {
+                this.displayResults();
+            }
             
         } catch (error) {
             console.error('Search failed:', error);
@@ -193,6 +273,111 @@ class PartsCatalog {
         } finally {
             this.hideLoading();
         }
+    }
+    displayEnhancedResults(results) {
+        const grid = document.getElementById('resultsGrid');
+        const noResults = document.getElementById('noResults');
+        const resultsCount = document.getElementById('resultsCount');
+        const resultsNumber = document.getElementById('resultsNumber');
+
+        grid.innerHTML = '';
+        
+        if (results.length === 0) {
+            noResults.classList.remove('hidden');
+            resultsCount.classList.add('hidden');
+            return;
+        }
+
+        noResults.classList.add('hidden');
+        resultsCount.classList.remove('hidden');
+        resultsNumber.textContent = results.length;
+
+        results.forEach(part => {
+            const card = document.createElement("div");
+            card.className = this.viewMode === 'grid' 
+                ? "bg-white rounded-lg shadow-md p-4 cursor-pointer fade-in"
+                : "bg-white rounded-lg shadow-md p-4 cursor-pointer fade-in flex";
+            
+            card.addEventListener('click', () => this.showPartDetailPage(part.id));
+            
+            // Handle both grid and list views for enhanced results
+            if (this.viewMode === 'grid') {
+                card.innerHTML = `
+                    <div class="h-48 bg-gray-100 relative mb-4">
+                        ${part.image_path ? 
+                            `<img src="/page_images/${part.image_path}" class="w-full h-full object-contain" alt="${part.part_number}">` : 
+                            `<div class="w-full h-full flex items-center justify-center">
+                                <i class="fas fa-image text-4xl text-gray-400"></i>
+                            </div>`
+                        }
+                        <div class="absolute top-2 right-2 bg-blue-600 text-white px-2 py-1 rounded text-sm">
+                            ${part.category || 'Uncategorized'}
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">${part.part_number}</h3>
+                    <p class="text-sm text-gray-600 mb-3">${part.description || "No description available"}</p>
+                    <p class="text-xs text-gray-500 mb-1">Catalog: ${part.catalog_name}</p>
+                    <p class="text-xs text-gray-500 mb-3">Page: ${part.page}</p>
+                    ${part.guides?.length ? `
+                        <div class="mt-2 pt-2 border-t border-gray-200">
+                            <h4 class="font-semibold text-sm text-gray-700 mb-1">Technical Guides:</h4>
+                            <ul class="space-y-1">
+                                ${part.guides.map(g => `
+                                    <li>
+                                        <a href="/guides/${g.id}" class="text-blue-600 hover:underline text-sm" onclick="event.stopPropagation()">
+                                            ${g.display_name}
+                                        </a>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    ` : ""}
+                    <div class="flex justify-between items-center mt-4">
+                        <span class="text-blue-600 text-sm font-medium">
+                            View Details →
+                        </span>
+                    </div>
+                `;
+            } else {
+                // List view for enhanced results
+                card.innerHTML = `
+                    <div class="w-32 flex-shrink-0 mr-4">
+                        ${part.image_path ? 
+                            `<img src="/page_images/${part.image_path}" class="w-full h-32 object-contain" alt="${part.part_number}">` : 
+                            `<div class="w-full h-32 flex items-center justify-center">
+                                <i class="fas fa-image text-2xl text-gray-400"></i>
+                            </div>`
+                        }
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800 mb-2">${part.part_number}</h3>
+                                <p class="text-sm text-gray-600 mb-3">${part.description || "No description available"}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                                    ${part.category || 'Uncategorized'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-xs text-gray-500">Catalog: ${part.catalog_name}</p>
+                                <p class="text-xs text-gray-500">Page: ${part.page}</p>
+                            </div>
+                            ${part.guides?.length ? `
+                                <div class="text-right">
+                                    <span class="text-xs text-gray-600">${part.guides.length} guide(s) available</span>
+                                </div>
+                            ` : ""}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            grid.appendChild(card);
+        });
     }
 
     displayResults() {
@@ -516,7 +701,46 @@ class PartsCatalog {
             <p class="text-sm text-gray-600 mt-2">Installation video coming soon for ${part.part_number}</p>
         `;
     }
-
+    loadProductImage(imagePath, s3ImageUrl) {
+        const placeholder = document.getElementById('product-image-placeholder');
+        const image = document.getElementById('product-image');
+        const loading = document.getElementById('image-loading');
+        
+        // Show loading
+        placeholder.classList.add('hidden');
+        loading.classList.remove('hidden');
+        image.classList.add('hidden');
+        
+        // Try S3 URL first, then local path
+        const imageUrl = s3ImageUrl || `/images/${imagePath.split('/').pop()}`;
+        
+        const img = new Image();
+        img.onload = function() {
+            image.src = imageUrl;
+            image.classList.remove('hidden');
+            loading.classList.add('hidden');
+        };
+        img.onerror = function() {
+            // Fallback to local image
+            if (s3ImageUrl && imagePath) {
+                const localUrl = `/images/${imagePath.split('/').pop()}`;
+                image.src = localUrl;
+                image.onload = function() {
+                    image.classList.remove('hidden');
+                    loading.classList.add('hidden');
+                };
+                image.onerror = function() {
+                    // Show placeholder if both URLs fail
+                    placeholder.classList.remove('hidden');
+                    loading.classList.add('hidden');
+                };
+            } else {
+                placeholder.classList.remove('hidden');
+                loading.classList.add('hidden');
+            }
+        };
+        img.src = imageUrl;
+    }
     setProductImage(part) {
         const imagePlaceholder = document.getElementById('product-image-placeholder');
         const productImage = document.getElementById('product-image');
@@ -652,9 +876,20 @@ class PartsCatalog {
         container.innerHTML = html;
     }
 
-    showTechnicalGuide(part) {
-        // Implement technical guide display
-        this.showError('Technical guide feature will be implemented soon');
+    async showTechnicalGuide(part) {
+        try {
+            const response = await fetch(`/api/parts/${part.id}/guides`);
+            const data = await response.json();
+            
+            if (data.guides && data.guides.length > 0) {
+                this.displayTechnicalGuides(data.guides, part);
+            } else {
+                this.showError('No technical guides available for this part');
+            }
+        } catch (error) {
+            console.error('Failed to load technical guides:', error);
+            this.showError('Failed to load technical guides');
+        }
     }
 
     showHomePage() {
@@ -676,22 +911,6 @@ class PartsCatalog {
     showError(message) {
         // Simple error display - you can enhance this with a proper toast/notification
         alert(message);
-    }
-
-    async showTechnicalGuide(part) {
-        try {
-            const response = await fetch(`/api/parts/${part.id}/guides`);
-            const data = await response.json();
-            
-            if (data.guides && data.guides.length > 0) {
-                this.displayTechnicalGuides(data.guides, part);
-            } else {
-                this.showError('No technical guides available for this part');
-            }
-        } catch (error) {
-            console.error('Failed to load technical guides:', error);
-            this.showError('Failed to load technical guides');
-        }
     }
 
     displayTechnicalGuides(guides, part) {
@@ -765,75 +984,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-async showTechnicalGuide(part) {
-    try {
-        const response = await fetch(`/api/parts/${part.id}/guides`);
-        const data = await response.json();
-        
-        if (data.guides && data.guides.length > 0) {
-            this.displayTechnicalGuides(data.guides, part);
-        } else {
-            this.showError('No technical guides available for this part');
-        }
-    } catch (error) {
-        console.error('Failed to load technical guides:', error);
-        this.showError('Failed to load technical guides');
-    }
-}
-
-displayTechnicalGuides(guides, part) {
-    // Create a modal or section to display guides
-    const guideHTML = `
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg p-6 max-w-4xl max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold">Technical Guides for ${part.part_number}</h3>
-                    <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="space-y-4">
-                    ${guides.map(guide => `
-                        <div class="border rounded-lg p-4">
-                            <h4 class="font-semibold text-lg">${guide.display_name}</h4>
-                            <p class="text-gray-600 mt-2">${guide.description || 'No description available'}</p>
-                            
-                            ${guide.sections && guide.sections.length > 0 ? `
-                                <div class="mt-3">
-                                    <h5 class="font-medium">Sections:</h5>
-                                    <ul class="list-disc list-inside mt-1">
-                                        ${guide.sections.map(section => `
-                                            <li class="text-sm">${section.title}</li>
-                                        `).join('')}
-                                    </ul>
-                                </div>
-                            ` : ''}
-                            
-                            ${guide.key_specifications && Object.keys(guide.key_specifications).length > 0 ? `
-                                <div class="mt-3">
-                                    <h5 class="font-medium">Key Specifications:</h5>
-                                    <div class="grid grid-cols-2 gap-2 mt-1">
-                                        ${Object.entries(guide.key_specifications).map(([key, value]) => `
-                                            <div class="text-sm">
-                                                <span class="font-medium">${key}:</span> ${value}
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            ` : ''}
-                            
-                            <div class="mt-3 flex justify-between items-center">
-                                <span class="text-sm text-gray-500">Confidence: ${(guide.confidence_score * 100).toFixed(0)}%</span>
-                                <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
-                                    View Full Guide
-                                </button>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', guideHTML);
-}

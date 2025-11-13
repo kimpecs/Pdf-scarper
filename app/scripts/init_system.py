@@ -2,8 +2,10 @@
 """
 Complete system initialization - database setup + PDF processing
 """
+import os
 import sys
 from pathlib import Path
+from fastapi import File, UploadFile
 
 # Add project root to sys.path
 project_root = Path(__file__).parent

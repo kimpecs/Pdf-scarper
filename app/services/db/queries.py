@@ -1,8 +1,12 @@
+import os
 import sqlite3
 import json
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import sys
+from fastapi import File, UploadFile 
+
+
 
 # EXACT PATH: This file is in app/services/db/
 script_dir = Path(__file__).parent  # app/services/db/
@@ -157,3 +161,72 @@ class DatabaseManager:
         conn.close()
         
         return guides
+    def get_guides_for_part(self, part_number: str) -> List[Dict[str, Any]]:
+        """Get all technical guides related to a specific part number"""
+        conn = self.get_connection()
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT tg.*, gp.confidence_score
+            FROM technical_guides tg
+            JOIN guide_parts gp ON tg.id = gp.guide_id
+            WHERE gp.part_number = ? AND tg.is_active = 1
+            ORDER BY gp.confidence_score DESC
+        """, (part_number,))
+        
+        guides = []
+        for row in cur.fetchall():
+            guide_data = dict(row)
+            # Parse JSON fields
+            if guide_data.get('template_fields'):
+                guide_data['template_fields'] = json.loads(guide_data['template_fields'])
+            if guide_data.get('related_parts'):
+                guide_data['related_parts'] = json.loads(guide_data['related_parts'])
+            guides.append(guide_data)
+        
+        conn.close()
+        return guides
+
+    def insert_technical_guide(self, guide_data: Dict[str, Any]) -> int:
+        """Insert a new technical guide"""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        
+        # Convert JSON fields to strings
+        template_fields = json.dumps(guide_data.get('template_fields', {}))
+        related_parts = json.dumps(guide_data.get('related_parts', []))
+        
+        cur.execute("""
+            INSERT OR REPLACE INTO technical_guides 
+            (guide_name, display_name, description, category, template_fields, pdf_path, related_parts)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            guide_data['guide_name'],
+            guide_data['display_name'],
+            guide_data.get('description'),
+            guide_data.get('category'),
+            template_fields,
+            guide_data.get('pdf_path'),
+            related_parts
+        ))
+        
+        guide_id = cur.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return guide_id
+
+    def create_guide_part_association(self, guide_id: int, part_numbers: List[str]):
+        """Create associations between guide and parts"""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        
+        for part_number in part_numbers:
+            cur.execute("""
+                INSERT OR IGNORE INTO guide_parts (guide_id, part_number)
+                VALUES (?, ?)
+            """, (guide_id, part_number))
+        
+        conn.commit()
+        conn.close()

@@ -7,6 +7,7 @@ and launches Uvicorn.
 import uvicorn
 import sys
 from pathlib import Path
+from fastapi import File, UploadFile
 
 def ensure_directories():
     """Ensure all required directories exist before starting the server"""

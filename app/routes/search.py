@@ -1,8 +1,49 @@
 from fastapi import APIRouter, HTTPException, Query
 from app.services.db.queries import DatabaseManager
+from services.pdf_processing.extract_guides import GuideExtractor
+from services.pdf_processing.extract_catalog import CatalogExtractor
 
-router = APIRouter()
+
+router = APIRouter(prefix="/api/search", tags=["Search"])
+
 db = DatabaseManager()
+guide_extractor = GuideExtractor()
+catalog_extractor = CatalogExtractor()
+
+@router.get("/")
+def search_parts(q: str = Query(..., description="Search by part number or keyword")):
+    """
+    Search both catalog and guide data by part number or keyword
+    """
+    conn = db.get_connection()
+    cur = conn.cursor()
+    
+    # Search by part number or description
+    cur.execute("""
+        SELECT * FROM parts_catalog
+        WHERE part_number LIKE ? OR description LIKE ?
+        ORDER BY part_number ASC
+    """, (f"%{q}%", f"%{q}%"))
+    
+    parts = [dict(row) for row in cur.fetchall()]
+
+    # Attach related guides for each part
+    for part in parts:
+        guides = guide_extractor.get_guides_for_part(part["part_number"])
+        part["guides"] = [
+            {
+                "id": g["id"],
+                "display_name": g["display_name"],
+                "category": g["category"],
+                "pdf_path": g["pdf_path"],
+                "confidence": g.get("confidence_score", 1.0)
+            }
+            for g in guides
+        ]
+
+    conn.close()
+    return {"query": q, "results": parts}
+
 
 @router.get("/search")
 async def search_parts(
@@ -22,7 +63,7 @@ async def search_parts(
             limit=limit
         )
         
-        # Convert to frontend format
+       
         formatted_results = []
         for part in results:
             formatted_part = {

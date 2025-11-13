@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import sqlite3
+from fastapi import File, UploadFile
 
 # Add project root to Python path
 project_root = Path(__file__).resolve().parent.parent  # Points to app/ directory
@@ -65,8 +66,23 @@ def setup_database():
             category TEXT,
             s3_key TEXT,
             template_fields TEXT,
+            pdf_path TEXT,
+            related_parts TEXT,
             is_active BOOLEAN DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+
+        # --- Guide-Parts Association Table ---
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS guide_parts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            guide_id INTEGER,
+            part_number TEXT,
+            confidence_score REAL DEFAULT 1.0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (guide_id) REFERENCES technical_guides (id),
+            UNIQUE(guide_id, part_number)
         );
         """)
 
@@ -116,6 +132,10 @@ def setup_database():
         CREATE INDEX IF NOT EXISTS idx_part_type ON parts(part_type);
         CREATE INDEX IF NOT EXISTS idx_category ON parts(category);
         CREATE INDEX IF NOT EXISTS idx_oe_numbers ON parts(oe_numbers);
+        
+        -- Guide-Parts indexes
+        CREATE INDEX IF NOT EXISTS idx_guide_parts_guide_id ON guide_parts(guide_id);
+        CREATE INDEX IF NOT EXISTS idx_guide_parts_part_number ON guide_parts(part_number);
         """)
 
         conn.commit()

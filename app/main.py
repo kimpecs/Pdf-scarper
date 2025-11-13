@@ -1,8 +1,10 @@
+import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi import File, UploadFile, HTTPException
 from pathlib import Path
 import sqlite3
 import json
@@ -12,6 +14,8 @@ from app.utils.config import settings
 from app.utils.logger import setup_logging
 from app.routes import parts, guides, health,search
 from app.services.db.queries import DatabaseManager
+from app.services.storage.storage_service import StorageService
+from app.services.storage.file_service import FileService
 
 
 # ------------------------------------------------------------------------------
@@ -50,7 +54,7 @@ for folder in [DATA_DIR, STATIC_DIR, DATA_DIR / "pdfs", DATA_DIR / "page_images"
 # ------------------------------------------------------------------------------
 # [OK] Mount static and data directories
 # ------------------------------------------------------------------------------
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.mount("/pdfs", StaticFiles(directory=DATA_DIR / "pdfs"), name="pdfs")
 app.mount("/images", StaticFiles(directory=DATA_DIR / "page_images"), name="images")
 app.mount("/guides", StaticFiles(directory=DATA_DIR / "guides"), name="guides")
@@ -217,10 +221,66 @@ async def get_technical_guides():
         logger.error(f"Error fetching guides: {e}")
         return {"guides": []}
     
+@app.post("/api/upload-pdf")
+async def upload_pdf(file: UploadFile = File(...), category: str = "catalogs"):
+    """Upload PDF to storage (local or S3)"""
+    try:
+        # Save uploaded file temporarily
+        temp_path = f"/tmp/{file.filename}"
+        with open(temp_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+        
+        # Upload to storage
+        file_key = await storage_service.upload_pdf(temp_path, category)
+        
+        # Clean up temp file
+        os.unlink(temp_path)
+        
+        if file_key:
+            url = storage_service.get_pdf_url(file_key)
+            return {
+                "file_key": file_key, 
+                "download_url": url, 
+                "message": "File uploaded successfully",
+                "storage_type": "s3" if storage_service.use_s3 else "local"
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to upload file")
+            
+    except Exception as e:
+        logger.error(f"Error uploading PDF: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/storage/files")
+async def list_storage_files(prefix: str = ""):
+    """List files in storage"""
+    try:
+        if storage_service.use_s3:
+            files = storage_service.s3.list_objects(prefix)
+            return {"files": files, "storage_type": "s3"}
+        else:
+            files = storage_service.local.list_files(prefix)
+            return {"files": [str(f) for f in files], "storage_type": "local"}
+    except Exception as e:
+        logger.error(f"Error listing files: {e}")
+        return {"files": [], "error": str(e)}
+
+@app.get("/api/storage/status")
+async def storage_status():
+    """Get storage configuration status"""
+    return {
+        "use_s3": storage_service.use_s3,
+        "local_data_dir": str(storage_service.local.data_dir) if hasattr(storage_service.local, 'data_dir') else None,
+        "s3_bucket": storage_service.s3.bucket_name if hasattr(storage_service.s3, 'bucket_name') else None
+    }   
+
+
+    
 # ------------------------------------------------------------------------------
 # [OK] Template configuration (for base.html + index.html via Jinja2)
 # ------------------------------------------------------------------------------
-templates = Jinja2Templates(directory=TEMPLATES_DIR)
+templates = Jinja2Templates(directory="app/templates")
 
 # ------------------------------------------------------------------------------
 # [OK] Include routers

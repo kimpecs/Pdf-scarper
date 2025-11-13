@@ -2,9 +2,11 @@
 """
 Run complete system test sequence
 """
+import os
 import subprocess
 import sys
 from pathlib import Path
+from fastapi import File, UploadFile
 
 def run_script(script_name):
     """Run a test script and return success status"""
@@ -70,7 +72,7 @@ def main():
         print("3. Customize the web interface in app/static/")
         print("4. Set up production deployment")
     else:
-        print("⚠️  Some tests failed. Review the output above.")
+        print(" [WARNING]  Some tests failed. Review the output above.")
     
     sys.exit(0 if passed == total else 1)
 

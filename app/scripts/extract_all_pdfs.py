@@ -2,8 +2,10 @@
 """
 Batch process all PDFs in a directory
 """
+import os
 import sys
 from pathlib import Path
+from fastapi import File, UploadFile
 
 # EXACT PATH: This script is in app/scripts/
 script_dir = Path(__file__).parent  # app/scripts/

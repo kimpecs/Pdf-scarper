@@ -5,8 +5,8 @@ import json
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 import sys
+from fastapi import File, UploadFile    
 
-# EXACT PATH: This file is in app/services/pdf_processing/
 script_dir = Path(__file__).parent  # app/services/pdf_processing/
 services_dir = script_dir.parent    # app/services/
 app_dir = services_dir.parent       # app/

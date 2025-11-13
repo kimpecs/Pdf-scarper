@@ -27,4 +27,12 @@ class TechnicalGuide(BaseModel):
     category: Optional[str] = None
     s3_key: Optional[str] = None
     template_fields: Optional[Dict[str, Any]] = None
+    pdf_path: Optional[str] = None  # ADDED
+    related_parts: Optional[List[str]] = None  # ADDED
     is_active: bool = True
+
+class GuidePartAssociation(BaseModel):  # NEW
+    id: Optional[int] = None
+    guide_id: int
+    part_number: str
+    confidence_score: float = 1.0

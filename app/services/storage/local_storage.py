@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from app.utils.config import settings
 from app.utils.logger import setup_logging
 
@@ -35,3 +35,21 @@ class LocalStorage:
         if dir_path.exists():
             return list(dir_path.iterdir())
         return []
+    
+    def file_exists(self, filename: str) -> bool:
+        """Check if file exists in local storage"""
+        file_path = self.data_dir / filename
+        return file_path.exists()
+    
+    def delete_file(self, filename: str) -> bool:
+        """Delete file from local storage"""
+        try:
+            file_path = self.data_dir / filename
+            if file_path.exists():
+                file_path.unlink()
+                logger.info(f"Deleted file: {file_path}")
+                return True
+            return False
+        except Exception as e:
+            logger.error(f"Error deleting file: {e}")
+            return False

@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
+from typing import Optional  
 from dotenv import load_dotenv
+from fastapi import File, UploadFile  
 
 load_dotenv()
 
@@ -9,11 +11,12 @@ class Settings:
     DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/catalog.db")
     
     # AWS S3
-    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-    AWS_S3_BUCKET = os.getenv("AWS_S3_BUCKET")
-    AWS_S3_REGION = os.getenv("AWS_S3_REGION", "us-east-1")
-    AWS_S3_ENDPOINT = os.getenv("AWS_S3_ENDPOINT")
+    USE_S3_STORAGE: bool = os.getenv("USE_S3_STORAGE", "false").lower() == "true"
+    AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID", "")
+    AWS_SECRET_ACCESS_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+    AWS_S3_REGION: str = os.getenv("AWS_S3_REGION", "us-east-1")
+    AWS_S3_BUCKET: str = os.getenv("AWS_S3_BUCKET", "")
+    AWS_S3_ENDPOINT: Optional[str] = os.getenv("AWS_S3_ENDPOINT")
     
     # Application
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
@@ -22,8 +25,9 @@ class Settings:
     
     # Paths - FIXED: Use correct base directory
     BASE_DIR = Path(__file__).parent.parent  # Points to app/ directory
-    DATA_DIR = BASE_DIR / "data"
+    DATA_DIR = Path(os.getenv('DATA_DIR', './data'))
     STATIC_DIR = BASE_DIR / "static"
+    DB_PATH = Path(r"C:\Users\kpecco\Desktop\codes\TESTING\app\data\catalog.db")
     
     # Templates
     TEMPLATES_DIR = BASE_DIR / "templates"
@@ -59,5 +63,8 @@ class Settings:
     ENABLE_PDF_DOWNLOAD = os.getenv("ENABLE_PDF_DOWNLOAD", "true").lower() == "true"
     ENABLE_ADVANCED_SEARCH = os.getenv("ENABLE_ADVANCED_SEARCH", "true").lower() == "true"
     ENABLE_RELATED_CONTENT = os.getenv("ENABLE_RELATED_CONTENT", "true").lower() == "true"
+    
+    MSSQL_CONNECTION_STRING = os.getenv('MSSQL_CONNECTION_STRING', '')
+    MSSQL_DATABASE = os.getenv('MSSQL_DATABASE', 'ApelloKbDev')
 
 settings = Settings()
