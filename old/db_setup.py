@@ -11,7 +11,7 @@ from app.utils.logger import setup_logging
 logger = setup_logging()
 
 # Directories (can also come from settings if needed)
-IMAGES_DIR = Path(settings.IMAGES_DIR if hasattr(settings, 'IMAGES_DIR') else "page_images")
+IMAGES_DIR = Path(settings.IMAGES_DIR if hasattr(settings, 'IMAGES_DIR') else "part_images")
 PDF_DIR = Path(settings.PDF_DIR if hasattr(settings, 'PDF_DIR') else "pdfs")
 GUIDES_DIR = Path(settings.GUIDES_DIR if hasattr(settings, 'GUIDES_DIR') else "guides")
 

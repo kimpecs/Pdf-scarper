@@ -12,9 +12,10 @@ __pycache__/
 *.sqlite3
 
 # Generated images and PDFs
-page_images/
+part_images/
 pdfs/
 *.pdf
+part_images/
 
 # Environment variables
 .env

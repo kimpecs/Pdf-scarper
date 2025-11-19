@@ -1,6 +1,7 @@
+# s3_storage.py
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
-from typing import Optional, List, BinaryIO
+from typing import Optional, List
 from app.utils.config import settings
 from app.utils.logger import setup_logging
 import os
@@ -34,8 +35,9 @@ class S3Storage:
             )
             self.bucket_name = settings.AWS_S3_BUCKET
             
-            # Test connection immediately
-            self._test_connection()
+            # REMOVED: Don't test connection automatically during init
+            # This causes import failures if there are permission issues
+            # self._test_connection()
             
         except NoCredentialsError:
             logger.error("No AWS credentials found")
@@ -48,12 +50,12 @@ class S3Storage:
             logger.error(f"Unexpected error during S3 initialization: {e}")
             raise
     
-    def _test_connection(self):
-        """Test S3 connection and bucket access"""
+    def test_connection(self) -> bool:
+        """Test S3 connection and bucket access - call this manually"""
         try:
-            # Simple operation to test credentials and bucket access
             self.s3_client.head_bucket(Bucket=self.bucket_name)
             logger.info(f"✅ S3 connection successful. Bucket '{self.bucket_name}' is accessible")
+            return True
         except ClientError as e:
             error_code = e.response['Error']['Code']
             if error_code == '404':
@@ -62,8 +64,9 @@ class S3Storage:
                 logger.error(f"Access denied to bucket '{self.bucket_name}'. Check permissions.")
             else:
                 logger.error(f"S3 connection test failed: {error_code} - {e}")
-            raise
+            return False
     
+    # ... rest of your methods remain the same ...
     def upload_file(self, file_path: str, s3_key: str) -> bool:
         """Upload file to S3"""
         try:
@@ -83,7 +86,6 @@ class S3Storage:
             logger.error(f"Unexpected error uploading {file_path}: {e}")
             return False
     
-    # ... rest of your methods remain the same ...
     def generate_presigned_url(self, s3_key: str, expiration: int = 3600) -> Optional[str]:
         """Generate presigned URL for S3 object"""
         try:

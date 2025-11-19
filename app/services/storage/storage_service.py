@@ -50,11 +50,11 @@ class StorageService:
                 if pdf_filename:
                     pdf_name = os.path.splitext(pdf_filename)[0]
                     if page_number is not None:
-                        s3_key = f"page_images/{pdf_name}/page_{page_number:03d}_{filename}"
+                        s3_key = f"part_images/{pdf_name}/page_{page_number:03d}_{filename}"
                     else:
-                        s3_key = f"page_images/{pdf_name}/{filename}"
+                        s3_key = f"part_images/{pdf_name}/{filename}"
                 else:
-                    s3_key = f"page_images/{filename}"
+                    s3_key = f"part_images/{filename}"
                 
                 success = self.s3.upload_file(image_path, s3_key)
                 if success:
@@ -64,9 +64,9 @@ class StorageService:
                 # Local storage
                 if pdf_filename:
                     pdf_name = os.path.splitext(pdf_filename)[0]
-                    local_filename = f"page_images/{pdf_name}/{filename}"
+                    local_filename = f"part_images/{pdf_name}/{filename}"
                 else:
-                    local_filename = f"page_images/{filename}"
+                    local_filename = f"part_images/{filename}"
                     
                 local_path = self.local.save_file(Path(image_path), local_filename)
                 if local_path:
@@ -87,7 +87,7 @@ class StorageService:
     
     def get_image_url(self, image_key: str) -> Optional[str]:
         """Get image URL from storage"""
-        if self.use_s3 and image_key.startswith('page_images/'):
+        if self.use_s3 and image_key.startswith('part_images/'):
             return self.s3.generate_presigned_url(image_key)
         else:
             return self.local.get_file_url(image_key)
@@ -121,14 +121,14 @@ class StorageService:
     
     def file_exists(self, file_key: str) -> bool:
         """Check if file exists in storage"""
-        if self.use_s3 and file_key.startswith(('pdfs/', 'page_images/', 'processed_data/')):
+        if self.use_s3 and file_key.startswith(('pdfs/', 'part_images/', 'processed_data/')):
             return self.s3.object_exists(file_key)
         else:
             return self.local.file_exists(file_key)
     
     def delete_file(self, file_key: str) -> bool:
         """Delete file from storage"""
-        if self.use_s3 and file_key.startswith(('pdfs/', 'page_images/', 'processed_data/')):
+        if self.use_s3 and file_key.startswith(('pdfs/', 'part_images/', 'processed_data/')):
             return self.s3.delete_object(file_key)
         else:
             return self.local.delete_file(file_key)

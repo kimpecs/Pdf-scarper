@@ -24,7 +24,7 @@ def process_pdf_catalogs():
     # Use correct paths relative to app directory
     data_dir = app_dir / "data"
     pdf_directory = data_dir / "pdfs"
-    output_image_dir = data_dir / "page_images"
+    output_image_dir = data_dir / "part_images"
     
     if not pdf_directory.exists():
         logger.error(f"PDF directory not found: {pdf_directory}")

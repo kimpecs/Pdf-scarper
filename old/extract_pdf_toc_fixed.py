@@ -11,7 +11,7 @@ import requests
 import os
 
 DB_PATH = Path("catalog.db")
-IMAGES_DIR = Path("page_images")
+IMAGES_DIR = Path("part_images")
 PDF_DIR = Path("pdfs")
 IMAGES_DIR.mkdir(exist_ok=True)
 PDF_DIR.mkdir(exist_ok=True)

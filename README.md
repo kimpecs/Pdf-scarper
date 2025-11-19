@@ -28,7 +28,7 @@ TESTING/
 │   ├── styles.css
 │   └── app.js
 ├── pdfs/                   # Source PDF files (not tracked in Git)
-├── page_images/           # Extracted page images (not tracked)
+├── part_images/           # Extracted page images (not tracked)
 └── venv/                  # Python virtual environment (not tracked)
 ```
 

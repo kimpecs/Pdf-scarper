@@ -26,7 +26,7 @@ class PDFImageConverter:
             )
             
             output_paths = []
-            images_dir = settings.DATA_DIR / "page_images"
+            images_dir = settings.DATA_DIR / "part_images"
             images_dir.mkdir(exist_ok=True)
             
             for i, image in enumerate(images):

@@ -13,7 +13,7 @@ def setup_database():
     # FIXED: Use the correct database path that matches your config
     db_path = project_root / "data" / "catalog.db"  # This matches what your PDF processing expects
     data_dir = project_root / "data"
-    images_dir = data_dir / "page_images"
+    images_dir = data_dir / "part_images"
     pdf_dir = data_dir / "pdfs"
     guides_dir = data_dir / "guides"
     

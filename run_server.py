@@ -21,7 +21,7 @@ def ensure_directories():
     directories = [
         data_dir,
         data_dir / "pdfs",
-        data_dir / "page_images",
+        data_dir / "part_images",
         data_dir / "guides",
         static_dir,
         templates_dir

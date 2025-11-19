@@ -9,6 +9,7 @@ load_dotenv()
 class Settings:
     # FIXED: Use the correct database path
     DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/catalog.db")
+    DEBUG: bool = os.getenv("DEBUG", "true").lower() == "true"
     
     # AWS S3
     USE_S3_STORAGE: bool = os.getenv("USE_S3_STORAGE", "false").lower() == "true"
@@ -24,7 +25,7 @@ class Settings:
     IMAGE_DPI = int(os.getenv("IMAGE_DPI", "150"))
     
     # Paths - FIXED: Use correct base directory
-    BASE_DIR = Path(__file__).parent.parent  # Points to app/ directory
+    BASE_DIR = Path(__file__).parent.parent  
     DATA_DIR = Path(os.getenv('DATA_DIR', './data'))
     STATIC_DIR = BASE_DIR / "static"
     DB_PATH = Path(r"C:\Users\kpecco\Desktop\codes\TESTING\app\data\catalog.db")
@@ -33,7 +34,7 @@ class Settings:
     TEMPLATES_DIR = BASE_DIR / "templates"
     GUIDES_DIR = DATA_DIR / "guides"
     PDFS_DIR = DATA_DIR / "pdfs"
-    PAGE_IMAGES_DIR = DATA_DIR / "page_images"
+    part_images_DIR = DATA_DIR / "part_images"
     
     # Frontend Settings
     FRONTEND_TITLE = os.getenv("FRONTEND_TITLE", "Knowledge Base")

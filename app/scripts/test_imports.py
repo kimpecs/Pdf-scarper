@@ -1,29 +1,35 @@
 #!/usr/bin/env python3
 """
-Test script to verify imports work correctly
+Script to fix image paths in the database
 """
-import sys
+import sqlite3
+import os
 from pathlib import Path
 
-# EXACT PATH: This script is in app/scripts/
-script_dir = Path(__file__).parent  # app/scripts/
-app_dir = script_dir.parent         # app/
-sys.path.insert(0, str(app_dir))
+def fix_image_paths():
+    db_path = "app/data/catalog.db"
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    
+    # Get all parts with image paths
+    cur.execute("SELECT id, image_path FROM parts WHERE image_path IS NOT NULL")
+    parts = cur.fetchall()
+    
+    updates = 0
+    for part_id, image_path in parts:
+        if image_path:
+            # Extract just the filename from the path
+            filename = Path(image_path).name
+            new_path = f"part_images/{filename}"
+            
+            # Update the database
+            cur.execute("UPDATE parts SET image_path = ? WHERE id = ?", (new_path, part_id))
+            updates += 1
+            print(f"Updated part {part_id}: {image_path} -> {new_path}")
+    
+    conn.commit()
+    conn.close()
+    print(f"Fixed {updates} image paths")
 
-try:
-    from services.pdf_processing.extract_catalog import CatalogExtractor
-    print("✓ CatalogExtractor imported successfully")
-    
-    from services.pdf_processing.extract_guides import GuideExtractor
-    print("✓ GuideExtractor imported successfully")
-    
-    from services.db.queries import DatabaseManager
-    print("✓ DatabaseManager imported successfully")
-    
-    from utils.logger import setup_logging
-    print("✓ setup_logging imported successfully")
-    
-    print("All imports successful!")
-    
-except ImportError as e:
-    print(f"✗ Import failed: {e}")
+if __name__ == "__main__":
+    fix_image_paths()

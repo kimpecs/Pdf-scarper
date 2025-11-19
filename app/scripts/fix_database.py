@@ -1,43 +1,61 @@
-# [file name]: fix_database.py
-import sqlite3
-from pathlib import Path
+# scripts/test_remote_connection.py
+import pyodbc
+import os
+from dotenv import load_dotenv
 
-def fix_database_schema():
-    db_path = Path(r"C:\Users\kpecco\Desktop\codes\TESTING\app\data\catalog.db")
+load_dotenv()
+
+def test_remote_sql():
+    """Test connection to your remote SQL Server"""
     
-    if not db_path.exists():
-        print(f"Database not found at {db_path}")
-        return
+    # Get connection string from environment
+    connection_string = os.getenv('MSSQL_CONNECTION_STRING')
     
-    conn = sqlite3.connect(str(db_path))
-    cur = conn.cursor()
+    if not connection_string:
+        print("❌ MSSQL_CONNECTION_STRING not found in environment file")
+        return False
+    
+    print("🔍 Testing Remote SQL Server Connection...")
+    print(f"Server: 192.96.222.38,30002")
+    print(f"Database: ApelloKbDev")
+    print(f"Username: ligapp")
     
     try:
-        print("Adding missing columns to technical_guides table...")
+        conn = pyodbc.connect(connection_string, timeout=15)
+        cursor = conn.cursor()
         
-        # Add pdf_path column
-        cur.execute("ALTER TABLE technical_guides ADD COLUMN pdf_path TEXT")
-        print("✓ Added pdf_path column")
+        # Test basic query
+        cursor.execute("SELECT @@VERSION as version")
+        version = cursor.fetchone()[0]
+        print(f"✅ SUCCESS: Connected to SQL Server!")
+        print(f"   Version: {version.split('\n')[0]}")
         
-        # Add related_parts column  
-        cur.execute("ALTER TABLE technical_guides ADD COLUMN related_parts TEXT")
-        print("✓ Added related_parts column")
+        # Check if tables already exist
+        cursor.execute("""
+            SELECT TABLE_NAME 
+            FROM INFORMATION_SCHEMA.TABLES 
+            WHERE TABLE_TYPE = 'BASE TABLE'
+        """)
+        existing_tables = [row[0] for row in cursor.fetchall()]
         
-        conn.commit()
-        print("  Database schema updated successfully!")
+        print(f"   Existing tables: {existing_tables}")
         
-        # Verify the changes
-        cur.execute("PRAGMA table_info(technical_guides)")
-        columns = [col[1] for col in cur.fetchall()]
-        print("\nUpdated technical_guides columns:")
-        for col in columns:
-            print(f"  - {col}")
+        # Check if our target tables exist and their row counts
+        target_tables = ['parts', 'technical_guides', 'guide_parts']
+        for table in target_tables:
+            if table in existing_tables:
+                cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                count = cursor.fetchone()[0]
+                print(f"   {table}: {count:,} rows")
+            else:
+                print(f"   {table}: Does not exist")
+        
+        conn.close()
+        return True
         
     except Exception as e:
-        print(f"  Error updating database: {e}")
-        conn.rollback()
-    finally:
-        conn.close()
+        print(f"❌ Connection failed: {e}")
+        return False
 
 if __name__ == "__main__":
-    fix_database_schema()
+    test_remote_sql()

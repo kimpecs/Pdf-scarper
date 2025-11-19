@@ -17,7 +17,7 @@ import os
 # Get the absolute path to the current directory
 BASE_DIR = Path(__file__).parent.absolute()
 DB_PATH = BASE_DIR / "catalog.db"
-IMAGES_DIR = BASE_DIR / "page_images"
+IMAGES_DIR = BASE_DIR / "part_images"
 PDF_DIR = BASE_DIR / "pdfs"
 STATIC_DIR = BASE_DIR / "static"
 TemplateManager = TemplateManager()

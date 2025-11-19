@@ -4,11 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Knowledge Base - Parts Catalog</title>
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+
+    <!-- FIXED: Removed Jinja2. Use direct static path -->
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
+
 <body class="bg-gray-50">
+
     <!-- Navigation -->
     <nav class="bg-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4">
@@ -28,12 +33,15 @@
 
     <!-- Home Page Content -->
     <div id="home-page" class="max-w-7xl mx-auto px-4 py-8">
+
         <div class="flex flex-col lg:flex-row gap-8">
-            <!-- Left Sidebar - Search & Filters -->
+
+            <!-- Left Sidebar -->
             <div class="lg:w-1/4">
                 <div class="bg-white rounded-lg shadow-md p-6 mb-6 sticky top-4">
+
                     <h2 class="text-xl font-bold text-gray-800 mb-6">Knowledge Base</h2>
-                    
+
                     <!-- Search Input -->
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Search Parts</label>
@@ -53,12 +61,14 @@
                                 <option value="">All Catalogs</option>
                             </select>
                         </div>
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Section</label>
                             <select id="categoryFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2">
                                 <option value="">All Sections</option>
                             </select>
                         </div>
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Part Type</label>
                             <select id="partTypeFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2">
@@ -80,17 +90,20 @@
                             <i class="fas fa-exchange-alt mr-2"></i>Cross Reference / Alternate Part
                         </a>
                     </div>
+
                 </div>
             </div>
 
-            <!-- Main Content - Results -->
+            <!-- Main Results Column -->
             <div class="lg:w-3/4">
+
                 <!-- Results Count -->
                 <div id="resultsCount" class="bg-white rounded-lg shadow-md p-4 mb-6 hidden">
                     <div class="flex justify-between items-center">
                         <span class="text-gray-700">
                             Found <span id="resultsNumber" class="font-bold">0</span> results
                         </span>
+
                         <div class="flex space-x-2">
                             <button id="gridView" class="p-2 text-blue-600 border border-blue-600 rounded">
                                 <i class="fas fa-th"></i>
@@ -110,7 +123,6 @@
 
                 <!-- Results Grid -->
                 <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Results will be populated here by JavaScript -->
                 </div>
 
                 <!-- No Results -->
@@ -119,62 +131,63 @@
                     <h3 class="text-xl text-gray-600">No parts found</h3>
                     <p class="text-gray-500">Try adjusting your search criteria or filters</p>
                 </div>
+
             </div>
+
         </div>
+
     </div>
 
     <!-- Part Detail Page -->
-    <div id="part-detail-page" class="hidden">
-        <!-- Part Number Header -->
-        <div class="bg-white shadow-sm border-b">
-            <div class="max-w-7xl mx-auto px-4 py-6">
-                <div class="text-center">
-                    <h1 id="part-number-header" class="text-4xl font-bold text-gray-900 mb-2"></h1>
-                    <p id="part-description-header" class="text-gray-600 text-lg"></p>
-                </div>
+    <!-- Part Detail Page -->
+<div id="part-detail-page" class="hidden">
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <!-- Back Button Added Here -->
+            <div class="flex items-center justify-between mb-4">
+                <button onclick="catalog.showHomePage()" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-medium">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Search
+                </button>
+            </div>
+            <div class="text-center">
+                <h1 id="part-number-header" class="text-4xl font-bold text-gray-900 mb-2"></h1>
+                <p id="part-description-header" class="text-gray-600 text-lg"></p>
             </div>
         </div>
-
-        <!-- Main Content -->
+    </div>
         <div class="max-w-7xl mx-auto px-4 py-8">
             <div class="flex flex-col lg:flex-row gap-8">
-                <!-- Left Sidebar - Related Parts -->
+
+                <!-- Related Parts -->
                 <div class="lg:w-1/4">
-                    <div class="bg-white rounded-lg shadow-md p-6 mb-6 sticky top-4">
+                    <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Related Parts</h3>
-                        <div id="related-parts-list" class="space-y-3">
-                            <!-- Related parts will be populated here -->
-                        </div>
+                        <div id="related-parts-list" class="space-y-3"></div>
                     </div>
                 </div>
 
-                <!-- Main Content Column -->
+                <!-- Main Column -->
                 <div class="lg:w-2/4">
-                    <!-- Introduction Section -->
+
+                    <!-- Introduction -->
                     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                         <h2 class="text-xl font-bold text-gray-800 mb-4">Introduction</h2>
-                        <div id="intro-content" class="text-gray-700 space-y-4">
-                            <!-- Content will be populated -->
-                        </div>
+                        <div id="intro-content" class="text-gray-700 space-y-4"></div>
                     </div>
 
-                    <!-- Use Section -->
+                    <!-- Use -->
                     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                         <h2 class="text-xl font-bold text-gray-800 mb-4">Use</h2>
-                        <div id="use-content" class="text-gray-700">
-                            <!-- Use content will be populated -->
-                        </div>
+                        <div id="use-content" class="text-gray-700"></div>
                     </div>
 
-                    <!-- Specifications Section -->
+                    <!-- Specifications -->
                     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                         <h2 class="text-xl font-bold text-gray-800 mb-4">Specifications</h2>
-                        <div id="specifications-content" class="text-gray-700">
-                            <!-- Specifications will be populated -->
-                        </div>
+                        <div id="specifications-content" class="text-gray-700"></div>
                     </div>
 
-                    <!-- Cross Reference Section -->
+                    <!-- Cross Reference -->
                     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                         <h2 class="text-xl font-bold text-gray-800 mb-4">Cross Reference</h2>
                         <div class="overflow-x-auto">
@@ -187,86 +200,81 @@
                                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Compatible Vehicles</th>
                                     </tr>
                                 </thead>
-                                <tbody id="cross-reference-table">
-                                    <!-- Cross references will be populated -->
-                                </tbody>
+                                <tbody id="cross-reference-table"></tbody>
                             </table>
                         </div>
                     </div>
 
-                    <!-- Product Diagram Section -->
+                    <!-- Product Diagram -->
                     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                         <h2 class="text-xl font-bold text-gray-800 mb-4">Product Diagram</h2>
-                        <div id="diagram-content" class="text-center text-gray-500">
-                            <!-- Diagram will be populated -->
-                        </div>
+                        <div id="diagram-content" class="text-center text-gray-500"></div>
                     </div>
 
-                    <!-- Installation Video Section -->
+                    <!-- Installation Video -->
                     <div class="bg-white rounded-lg shadow-md p-6">
                         <h2 class="text-xl font-bold text-gray-800 mb-4">Installation Video</h2>
-                        <div id="video-content" class="text-center text-gray-500">
-                            <!-- Video will be populated -->
-                        </div>
+                        <div id="video-content" class="text-center text-gray-500"></div>
                     </div>
+
                 </div>
 
-                <!-- Right Sidebar - Product Info -->
+                <!-- Product Info Sidebar -->
                 <div class="lg:w-1/4">
                     <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
+
                         <!-- Product Image -->
                         <div id="product-image-container" class="mb-6 text-center">
-                        <div id="product-image-placeholder" class="image-placeholder w-full h-64 rounded-lg flex items-center justify-center mb-4 bg-gray-200">
-                            <i class="fas fa-image text-4xl text-gray-400"></i>
+                            <div id="product-image-placeholder" class="image-placeholder w-full h-64 rounded-lg flex items-center justify-center mb-4 bg-gray-200">
+                                <i class="fas fa-image text-4xl text-gray-400"></i>
+                            </div>
+                            
+                            <img id="product-image" src="" alt="" class="w-full h-64 object-contain rounded-lg hidden">
+                            <div id="image-loading" class="hidden text-gray-500 text-sm mt-2">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading image...
+                            </div>
                         </div>
-                        <img id="product-image" src="" alt="" class="w-full h-64 object-contain rounded-lg hidden">
-                        <div id="image-loading" class="hidden text-gray-500 text-sm mt-2">
-                            <i class="fas fa-spinner fa-spin mr-2"></i>Loading image...
-                        </div>
-                    </div>
 
                         <!-- Product Details -->
                         <div class="space-y-4">
+
                             <div>
                                 <h4 class="font-semibold text-gray-700 mb-2">Manufacturer</h4>
-                                <div id="manufacturer-info" class="text-gray-600 text-sm">
-                                    <!-- Manufacturer info -->
-                                </div>
+                                <div id="manufacturer-info" class="text-gray-600 text-sm"></div>
                             </div>
 
                             <div>
                                 <h4 class="font-semibold text-gray-700 mb-2">Material</h4>
-                                <div id="material-info" class="text-gray-600 text-sm">
-                                    <!-- Material info -->
-                                </div>
+                                <div id="material-info" class="text-gray-600 text-sm"></div>
                             </div>
 
                             <div>
                                 <h4 class="font-semibold text-gray-700 mb-2">General Info</h4>
-                                <div id="general-info" class="text-gray-600 text-sm space-y-1">
-                                    <!-- General info -->
-                                </div>
+                                <div id="general-info" class="text-gray-600 text-sm space-y-1"></div>
                             </div>
 
-                            <!-- Action Buttons -->
                             <div class="space-y-3 pt-4 border-t border-gray-200">
-                                <a id="pdf-link" href="#" target="_blank" 
-                                   class="block bg-red-600 text-white text-center px-4 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium">
+                                <a id="pdf-link" href="#" target="_blank" class="block bg-red-600 text-white text-center px-4 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium">
                                     <i class="fas fa-file-pdf mr-2"></i>View in PDF
                                 </a>
-                                <a id="technical-guide-link" href="#" 
-                                   class="block bg-blue-600 text-white text-center px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+
+                                <a id="technical-guide-link" href="#" class="block bg-blue-600 text-white text-center px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
                                     <i class="fas fa-book mr-2"></i>View in Technical Guide
                                 </a>
+
                                 <div class="text-center text-gray-600 text-sm mt-2">
                                     Catalog Page: <span id="part-page-number" class="font-medium">-</span>
                                 </div>
                             </div>
+
                         </div>
+
                     </div>
                 </div>
+
             </div>
         </div>
+
     </div>
 
     <script src="/static/app.js"></script>

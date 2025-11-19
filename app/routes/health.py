@@ -62,3 +62,10 @@ async def status():
             "status": "error",
             "error": str(e)
         }
+@router.get("/")
+async def health_check():
+    return {
+        "status": "healthy", 
+        "service": "parts-catalog",
+        "timestamp": datetime.utcnow().isoformat()
+    }
