@@ -18,12 +18,9 @@ class PartsCatalog {
             return part.image_url;
         }
         
-        // Fallback: extract filename from image_path
+        // Fallback: use image_path if available
         if (part && part.image_path) {
-            const filename = part.image_path.split('\\').pop().split('/').pop();
-            if (filename) {
-                return `/images/${filename}`;  // Changed from /part_images/ to /images/
-            }
+            return `/api/images/${part.id}`;
         }
         
         return null;
@@ -56,7 +53,6 @@ class PartsCatalog {
             document.getElementById("resultsGrid").innerHTML = "";
 
             try {
-                // Use the correct API endpoint
                 const params = new URLSearchParams({
                     q: query,
                     category: this.filters.category || '',
@@ -66,6 +62,7 @@ class PartsCatalog {
                 });
 
                 const response = await fetch(`/api/search?${params}`);
+                if (!response.ok) throw new Error('Search failed');
                 const data = await response.json();
 
                 document.getElementById("loadingSpinner").classList.add("hidden");
@@ -84,42 +81,13 @@ class PartsCatalog {
                 document.getElementById("noResults").classList.add("hidden");
 
                 data.results.forEach(part => {
-                    const card = document.createElement("div");
-                    card.className = "bg-white rounded-lg shadow-md p-4 cursor-pointer";
-                    card.addEventListener('click', () => this.showPartDetailPage(part.id));
-                    
-                    const imageUrl = this.getImageUrl(part);
-
-                    card.innerHTML = `
-                        <h3 class="text-lg font-bold text-gray-800">${part.part_number}</h3>
-                        <p class="text-sm text-gray-600 mb-2">${part.description || "No description available"}</p>
-                        ${imageUrl ? `<img src="${imageUrl}" class="w-full h-40 object-contain mb-2" alt="${part.part_number}" onerror="this.style.display='none'; this.parentNode.querySelector('.image-placeholder-inline').style.display='flex';">` : ""}
-                        <div class="image-placeholder-inline w-full h-40 flex items-center justify-center ${imageUrl ? 'hidden' : ''}">
-                            <i class="fas fa-image text-2xl text-gray-400"></i>
-                        </div>
-                        <p class="text-xs text-gray-500">Catalog: ${part.catalog_name || part.catalog_type || ''}</p>
-                        <p class="text-xs text-gray-500 mb-2">Page: ${part.page || ''}</p>
-                        ${part.guides && part.guides.length ? `
-                            <div class="mt-2">
-                                <h4 class="font-semibold text-sm text-gray-700 mb-1">Technical Guides:</h4>
-                                <ul class="space-y-1">
-                                    ${part.guides.map(g => `
-                                        <li>
-                                            <a href="/guides/${g.id}" class="text-blue-600 hover:underline text-sm" onclick="event.stopPropagation()">
-                                                ${g.display_name}
-                                            </a>
-                                        </li>
-                                    `).join('')}
-                                </ul>
-                            </div>
-                        ` : ""}
-                    `;
+                    const card = this.createPartCard(part);
                     resultsGrid.appendChild(card);
                 });
             } catch (err) {
                 console.error("Search error:", err);
                 document.getElementById("loadingSpinner").classList.add("hidden");
-                alert("Error fetching search results.");
+                this.showError("Error fetching search results.");
             }
         });
     }
@@ -150,7 +118,7 @@ class PartsCatalog {
 
             this.populateFilter('categoryFilter', categories);
             this.populateFilter('partTypeFilter', partTypes);
-            this.populateFilter('catalogFilter', catalogs.map(cat => cat.name));
+            this.populateFilter('catalogFilter', catalogs);
             
         } catch (error) {
             console.error('Failed to load filters:', error);
@@ -158,21 +126,36 @@ class PartsCatalog {
     }
 
     async fetchCategories() {
-        const response = await fetch('/api/search/categories');
-        const data = await response.json();
-        return data.categories || [];
+        try {
+            const response = await fetch('/api/analytics/categories');
+            const data = await response.json();
+            return data.map(item => item.category).filter(cat => cat);
+        } catch (error) {
+            console.error('Failed to fetch categories:', error);
+            return [];
+        }
     }
 
     async fetchPartTypes() {
-        const response = await fetch('/api/search/part_types');
-        const data = await response.json();
-        return data.part_types || [];
+        try {
+            const response = await fetch('/api/parts/types');
+            const data = await response.json();
+            return data.part_types || [];
+        } catch (error) {
+            console.error('Failed to fetch part types:', error);
+            return [];
+        }
     }
 
     async fetchCatalogs() {
-        const response = await fetch('/api/search/catalogs');
-        const data = await response.json();
-        return data.catalogs || [];
+        try {
+            const response = await fetch('/api/analytics/catalogs');
+            const data = await response.json();
+            return data.map(item => item.catalog_name).filter(name => name);
+        } catch (error) {
+            console.error('Failed to fetch catalogs:', error);
+            return [];
+        }
     }
 
     populateFilter(selectId, options) {
@@ -213,7 +196,6 @@ class PartsCatalog {
         // Filter changes
         [categoryFilter, partTypeFilter, catalogFilter].forEach(filter => {
             filter.addEventListener('change', (e) => {
-                // Map element id to filters object keys
                 const id = e.target.id;
                 if (id === 'categoryFilter') this.filters.category = e.target.value;
                 if (id === 'partTypeFilter') this.filters.partType = e.target.value;
@@ -231,17 +213,7 @@ class PartsCatalog {
     }
 
     setupDetailPageListeners() {
-        // Back button in detail page
-        const backButton = document.createElement('button');
-        backButton.innerHTML = '<i class="fas fa-arrow-left mr-2"></i>Back to Search';
-        backButton.className = 'bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-medium';
-        backButton.addEventListener('click', () => this.showHomePage());
-        
-        // Add back button to detail page header
-        const detailHeader = document.querySelector('#part-detail-page .bg-white');
-        if (detailHeader) {
-            detailHeader.querySelector('.text-center').insertAdjacentElement('beforebegin', backButton);
-        }
+        // Back button is now in HTML template
     }
 
     setupViewMode() {
@@ -292,7 +264,6 @@ class PartsCatalog {
                 limit: this.config.maxSearchResults || 50
             });
 
-            // Use the correct API endpoint
             const response = await fetch(`/api/search?${params}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -349,7 +320,6 @@ class PartsCatalog {
                 : part.description)
             : 'No description available';
 
-        // Use helper to get proper image URL
         const imageUrl = this.getImageUrl(part);
         const hasImage = !!imageUrl;
 
@@ -376,7 +346,7 @@ class PartsCatalog {
                     
                     <div class="flex justify-between items-center mt-4">
                         <span class="text-sm text-gray-500">
-                            ${part.catalog_type || 'No catalog'}
+                            ${part.catalog_name || 'No catalog'}
                         </span>
                         <span class="text-blue-600 text-sm font-medium">
                             View Details →
@@ -410,7 +380,7 @@ class PartsCatalog {
                                 ${part.category || 'Uncategorized'}
                             </span>
                             <div class="text-sm text-gray-500 mt-2">
-                                ${part.catalog_type || 'No catalog'}
+                                ${part.catalog_name || 'No catalog'}
                             </div>
                         </div>
                     </div>
@@ -424,6 +394,7 @@ class PartsCatalog {
     async showPartDetailPage(partId) {
         try {
             const response = await fetch(`/api/parts/${partId}`);
+            if (!response.ok) throw new Error('Part not found');
             const part = await response.json();
             this.currentPart = part;
             this.displayPartDetail(part);
@@ -463,8 +434,9 @@ class PartsCatalog {
         this.setGeneralInfo(part);
         this.setActionLinks(part);
 
-        // Load related parts
+        // Load related parts and guides
         this.loadRelatedParts(part);
+        this.loadPartGuides(part.id);
     }
 
     setIntroductionContent(part) {
@@ -473,7 +445,7 @@ class PartsCatalog {
         let introHTML = '';
         
         if (part.description) {
-            introHTML += `<p class="text-gray-700 leading-relaxed">${part.description}</p>`;
+            introHTML += `<p class="text-gray-700 leading-relaxed mb-4">${part.description}</p>`;
         }
         
         if (part.features) {
@@ -485,7 +457,9 @@ class PartsCatalog {
             `;
         }
 
-        if (introContainer) introContainer.innerHTML = introHTML || '<p class="text-gray-500 italic">No introduction content available.</p>';
+        if (introContainer) {
+            introContainer.innerHTML = introHTML || '<p class="text-gray-500 italic">No introduction content available.</p>';
+        }
     }
 
     setUseContent(part) {
@@ -493,29 +467,27 @@ class PartsCatalog {
         
         let useHTML = '';
         
-        if (part.applications && part.applications.length > 0) {
+        if (part.applications) {
             useHTML += `
                 <div class="mb-4">
-                    <h4 class="font-semibold text-gray-800 mb-2">Primary Applications:</h4>
-                    <div class="flex flex-wrap gap-2">
-                        ${part.applications.map(app => 
-                            `<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">${app}</span>`
-                        ).join('')}
-                    </div>
+                    <h4 class="font-semibold text-gray-800 mb-2">Applications:</h4>
+                    <p class="text-gray-700">${part.applications}</p>
                 </div>
             `;
         }
 
         if (part.machine_info) {
             useHTML += `
-                <div>
-                    <h4 class="font-semibold text-gray-800 mb-2">Compatible Machinery:</h4>
+                <div class="mt-4">
+                    <h4 class="font-semibold text-gray-800 mb-2">Machine Information:</h4>
                     <p class="text-gray-700">${part.machine_info}</p>
                 </div>
             `;
         }
 
-        if (useContainer) useContainer.innerHTML = useHTML || '<p class="text-gray-500 italic">No usage information available.</p>';
+        if (useContainer) {
+            useContainer.innerHTML = useHTML || '<p class="text-gray-500 italic">No usage information available.</p>';
+        }
     }
 
     setSpecificationsContent(part) {
@@ -523,26 +495,41 @@ class PartsCatalog {
         
         let specsHTML = '';
         
-        const specData = [
+        const basicSpecs = [
             { label: 'Part Number', value: part.part_number },
             { label: 'Category', value: part.category },
             { label: 'Part Type', value: part.part_type },
-            { label: 'Catalog Type', value: part.catalog_type },
-            { label: 'Page Reference', value: part.page }
-        ];
+            { label: 'Catalog', value: part.catalog_name },
+            { label: 'Page', value: part.page }
+        ].filter(spec => spec.value);
 
-        specData.forEach(spec => {
-            if (spec.value) {
+        if (basicSpecs.length > 0) {
+            specsHTML += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+            
+            basicSpecs.forEach(spec => {
                 specsHTML += `
-                    <div class="spec-item">
-                        <span class="spec-label">${spec.label}:</span>
-                        <span class="spec-value">${spec.value}</span>
+                    <div class="spec-item bg-gray-50 p-3 rounded">
+                        <span class="spec-label font-medium text-gray-700">${spec.label}:</span>
+                        <span class="spec-value text-gray-900">${spec.value}</span>
                     </div>
                 `;
-            }
-        });
+            });
+            
+            specsHTML += '</div>';
+        }
 
-        if (specsContainer) specsContainer.innerHTML = specsHTML || '<p class="text-gray-500 italic">No specifications available.</p>';
+        if (part.specifications) {
+            specsHTML += `
+                <div class="mt-4">
+                    <h4 class="font-semibold text-gray-800 mb-2">Additional Specifications:</h4>
+                    <p class="text-gray-700">${part.specifications}</p>
+                </div>
+            `;
+        }
+
+        if (specsContainer) {
+            specsContainer.innerHTML = specsHTML || '<p class="text-gray-500 italic">No specifications available.</p>';
+        }
     }
 
     setCrossReferences(part) {
@@ -550,34 +537,40 @@ class PartsCatalog {
         
         let crossRefHTML = '';
         
-        // Add current part as primary reference
-        crossRefHTML = `
-            <tr class="cross-ref-table bg-blue-50">
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">Primary</td>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">${part.part_number}</td>
-                <td class="px-4 py-2 text-sm text-gray-700">Main Part</td>
-                <td class="px-4 py-2 text-sm text-gray-700">All compatible applications</td>
-            </tr>
-        `;
+        if (part.oe_numbers) {
+            const oeNumbers = part.oe_numbers.split(',').map(num => num.trim());
+            oeNumbers.forEach((oeNum, index) => {
+                crossRefHTML += `
+                    <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
+                        <td class="px-4 py-2 text-sm text-gray-900">OEM</td>
+                        <td class="px-4 py-2 text-sm font-medium text-gray-900">${oeNum}</td>
+                        <td class="px-4 py-2 text-sm text-gray-700">Cross Reference</td>
+                        <td class="px-4 py-2 text-sm text-gray-700">Compatible with ${part.catalog_name || 'various vehicles'}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            crossRefHTML = '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">No cross references available.</td></tr>';
+        }
 
-        if (crossRefContainer) crossRefContainer.innerHTML = crossRefHTML || '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">No cross references available.</td></tr>';
+        if (crossRefContainer) crossRefContainer.innerHTML = crossRefHTML;
     }
 
     setDiagramContent(part) {
         const diagramContainer = document.getElementById('diagram-content');
-        
-        // Use the part image as diagram if available
         const imageUrl = this.getImageUrl(part);
+        
         if (diagramContainer) {
             if (imageUrl) {
                 diagramContainer.innerHTML = `
-                    <img src="${imageUrl}" alt="${part.part_number} Diagram" class="max-w-full h-auto mx-auto rounded-lg shadow-md">
-                    <p class="text-sm text-gray-600 mt-2">Product diagram for ${part.part_number}</p>
+                    <img src="${imageUrl}" alt="${part.part_number} Diagram" 
+                         class="max-w-full h-auto mx-auto rounded-lg shadow-md">
+                    <p class="text-sm text-gray-600 mt-2">Product image for ${part.part_number}</p>
                 `;
             } else {
                 diagramContainer.innerHTML = `
-                    <div class="image-placeholder w-full h-48 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-project-diagram text-4xl"></i>
+                    <div class="image-placeholder w-full h-48 rounded-lg flex items-center justify-center bg-gray-100">
+                        <i class="fas fa-project-diagram text-4xl text-gray-400"></i>
                     </div>
                     <p class="text-sm text-gray-600 mt-2">No diagram available for ${part.part_number}</p>
                 `;
@@ -589,8 +582,8 @@ class PartsCatalog {
         const videoContainer = document.getElementById('video-content');
         if (videoContainer) {
             videoContainer.innerHTML = `
-                <div class="image-placeholder w-full h-64 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-video text-4xl"></i>
+                <div class="image-placeholder w-full h-64 rounded-lg flex items-center justify-center bg-gray-100">
+                    <i class="fas fa-video text-4xl text-gray-400"></i>
                 </div>
                 <p class="text-sm text-gray-600 mt-2">Installation video coming soon for ${part.part_number}</p>
             `;
@@ -615,14 +608,15 @@ class PartsCatalog {
 
     setManufacturerInfo(part) {
         const manufacturerContainer = document.getElementById('manufacturer-info');
-        if (manufacturerContainer) manufacturerContainer.innerHTML = part.catalog_type 
-            ? `<p>${part.catalog_type}</p>`
-            : '<p class="text-gray-500 italic">Not specified</p>';
+        if (manufacturerContainer) {
+            manufacturerContainer.innerHTML = part.catalog_name 
+                ? `<p>${part.catalog_name}</p>`
+                : '<p class="text-gray-500 italic">Not specified</p>';
+        }
     }
 
     setMaterialInfo(part) {
         const materialContainer = document.getElementById('material-info');
-        // Extract material from description or use default
         const material = this.extractMaterial(part.description) || 'Various materials';
         if (materialContainer) materialContainer.innerHTML = `<p>${material}</p>`;
     }
@@ -644,7 +638,9 @@ class PartsCatalog {
             infoHTML += `<div><strong>Catalog Page:</strong> ${part.page}</div>`;
         }
 
-        if (generalContainer) generalContainer.innerHTML = infoHTML || '<div class="text-gray-500 italic">No general information available</div>';
+        if (generalContainer) {
+            generalContainer.innerHTML = infoHTML || '<div class="text-gray-500 italic">No general information available</div>';
+        }
     }
 
     setActionLinks(part) {
@@ -652,13 +648,12 @@ class PartsCatalog {
         const techGuideLink = document.getElementById('technical-guide-link');
         const pageNumber = document.getElementById('part-page-number');
 
-        if (pdfLink) {
-            if (part.pdf_url) {
-                pdfLink.href = part.pdf_url;
-                pdfLink.classList.remove('hidden');
-            } else {
-                pdfLink.classList.add('hidden');
-            }
+        // PDF link - use catalog PDF if available
+        if (pdfLink && part.catalog_name) {
+            pdfLink.href = `/pdfs/${part.catalog_name}.pdf#page=${part.page || 1}`;
+            pdfLink.classList.remove('hidden');
+        } else {
+            if (pdfLink) pdfLink.classList.add('hidden');
         }
 
         // Set page number
@@ -693,8 +688,8 @@ class PartsCatalog {
         try {
             const params = new URLSearchParams({
                 category: part.category || '',
-                catalog_type: part.catalog_type || '',
-                limit: 8
+                catalog_type: part.catalog_name || '',
+                limit: 6
             });
 
             const response = await fetch(`/api/search?${params}`);
@@ -702,11 +697,21 @@ class PartsCatalog {
 
             const relatedParts = (data.results || [])
                 .filter(p => p.id !== part.id)
-                .slice(0, 6); // Show max 6 related parts
+                .slice(0, 6);
 
             this.displayRelatedParts(relatedParts);
         } catch (err) {
             console.error("Failed to load related parts:", err);
+        }
+    }
+
+    async loadPartGuides(partId) {
+        try {
+            const response = await fetch(`/api/parts/${partId}/guides`);
+            const guides = await response.json();
+            this.displayPartGuides(guides);
+        } catch (err) {
+            console.error("Failed to load part guides:", err);
         }
     }
 
@@ -736,13 +741,36 @@ class PartsCatalog {
         container.innerHTML = html;
     }
 
+    displayPartGuides(guides) {
+        // Add guides to introduction section if available
+        if (guides && guides.length > 0) {
+            const introContainer = document.getElementById('intro-content');
+            if (introContainer) {
+                const guidesHTML = `
+                    <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-2">Technical Documentation:</h4>
+                        <div class="space-y-2">
+                            ${guides.map(guide => `
+                                <div class="flex items-center">
+                                    <i class="fas fa-book text-blue-600 mr-2"></i>
+                                    <span class="text-gray-700">${guide.display_name}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                introContainer.insertAdjacentHTML('beforeend', guidesHTML);
+            }
+        }
+    }
+
     async showTechnicalGuide(part) {
         try {
             const response = await fetch(`/api/parts/${part.id}/guides`);
-            const data = await response.json();
+            const guides = await response.json();
             
-            if (data.guides && data.guides.length > 0) {
-                this.displayTechnicalGuides(data.guides, part);
+            if (guides && guides.length > 0) {
+                this.displayTechnicalGuidesModal(guides, part);
             } else {
                 this.showError('No technical guides available for this part');
             }
@@ -750,6 +778,37 @@ class PartsCatalog {
             console.error('Failed to load technical guides:', error);
             this.showError('Failed to load technical guides');
         }
+    }
+
+    displayTechnicalGuidesModal(guides, part) {
+        const modalHTML = `
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg p-6 max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold">Technical Guides for ${part.part_number}</h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        ${guides.map(guide => `
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-semibold text-lg">${guide.display_name}</h4>
+                                <p class="text-gray-600 mt-2">${guide.description || 'No description available'}</p>
+                                <div class="mt-3 flex justify-between items-center">
+                                    <span class="text-sm text-gray-500">Confidence: ${(guide.confidence_score * 100).toFixed(0)}%</span>
+                                    <a href="/guides/${guide.id}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+                                        View Full Guide
+                                    </a>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
 
     showHomePage() {
@@ -775,65 +834,8 @@ class PartsCatalog {
     }
 
     showError(message) {
-        // Simple error display - you can enhance this with a proper toast/notification
+        // Simple error display
         alert(message);
-    }
-
-    displayTechnicalGuides(guides, part) {
-        // Create a modal or section to display guides
-        const guideHTML = `
-            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white rounded-lg p-6 max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold">Technical Guides for ${part.part_number}</h3>
-                        <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="space-y-4">
-                        ${guides.map(guide => `
-                            <div class="border rounded-lg p-4">
-                                <h4 class="font-semibold text-lg">${guide.display_name}</h4>
-                                <p class="text-gray-600 mt-2">${guide.description || 'No description available'}</p>
-                                
-                                ${guide.sections && guide.sections.length > 0 ? `
-                                    <div class="mt-3">
-                                        <h5 class="font-medium">Sections:</h5>
-                                        <ul class="list-disc list-inside mt-1">
-                                            ${guide.sections.map(section => `
-                                                <li class="text-sm">${section.title}</li>
-                                            `).join('')}
-                                        </ul>
-                                    </div>
-                                ` : ''}
-                                
-                                ${guide.key_specifications && Object.keys(guide.key_specifications).length > 0 ? `
-                                    <div class="mt-3">
-                                        <h5 class="font-medium">Key Specifications:</h5>
-                                        <div class="grid grid-cols-2 gap-2 mt-1">
-                                            ${Object.entries(guide.key_specifications).map(([key, value]) => `
-                                                <div class="text-sm">
-                                                    <span class="font-medium">${key}:</span> ${value}
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    </div>
-                                ` : ''}
-                                
-                                <div class="mt-3 flex justify-between items-center">
-                                    <span class="text-sm text-gray-500">Confidence: ${(guide.confidence_score * 100).toFixed(0)}%</span>
-                                    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
-                                        View Full Guide
-                                    </button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', guideHTML);
     }
 }
 

@@ -1,18 +1,17 @@
 import sys
 from pathlib import Path
 import sqlite3
-from fastapi import File, UploadFile
 
 # Add project root to Python path
-project_root = Path(__file__).resolve().parent.parent  # Points to app/ directory
+project_root = Path(__file__).resolve().parent  # Points to TESTING directory
 sys.path.insert(0, str(project_root))
 
 def setup_database():
-    """Initialize database without importing app modules"""
+    """Initialize database with proper image support and no duplicates"""
     
-    # FIXED: Use the correct database path that matches your config
-    db_path = project_root / "data" / "catalog.db"  # This matches what your PDF processing expects
-    data_dir = project_root / "data"
+    # Use correct database path
+    db_path = project_root / "app" / "data" / "catalog.db"
+    data_dir = project_root / "app" / "data"
     images_dir = data_dir / "part_images"
     pdf_dir = data_dir / "pdfs"
     guides_dir = data_dir / "guides"
@@ -24,19 +23,19 @@ def setup_database():
     # Delete existing DB if it exists
     if db_path.exists():
         db_path.unlink()
-        print(f"Deleted existing database at {db_path}")
+        print(f"✅ Deleted existing database at {db_path}")
 
-    print(f"Creating database at: {db_path}")
+    print(f"🆕 Creating fresh database at: {db_path}")
 
     try:
         # Connect to SQLite
         conn = sqlite3.connect(str(db_path))
         cur = conn.cursor()
 
-        # --- Parts Table ---
+        # --- Parts Table with UNIQUE constraint ---
         cur.execute("""
         CREATE TABLE IF NOT EXISTS parts (
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             catalog_name TEXT NOT NULL,
             catalog_type TEXT,
             part_type TEXT,
@@ -52,7 +51,8 @@ def setup_database():
             oe_numbers TEXT,
             applications TEXT,
             features TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(catalog_name, part_number, page)  -- Prevent duplicates
         );
         """)
 
@@ -83,6 +83,38 @@ def setup_database():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (guide_id) REFERENCES technical_guides (id),
             UNIQUE(guide_id, part_number)
+        );
+        """)
+
+        # --- Part-Guides Association Table ---
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS part_guides (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            part_id INTEGER,
+            guide_id INTEGER,
+            confidence_score REAL DEFAULT 1.0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (part_id) REFERENCES parts (id),
+            FOREIGN KEY (guide_id) REFERENCES technical_guides (id),
+            UNIQUE(part_id, guide_id)
+        );
+        """)
+
+        # --- Part Images Table ---
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS part_images (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            part_id INTEGER,
+            image_filename TEXT NOT NULL,
+            image_path TEXT NOT NULL,
+            image_type TEXT,  -- png, jpg, jpeg, webp
+            image_width INTEGER,
+            image_height INTEGER,
+            page_number INTEGER,
+            confidence REAL DEFAULT 1.0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (part_id) REFERENCES parts (id),
+            UNIQUE(part_id, image_filename)
         );
         """)
 
@@ -124,27 +156,40 @@ def setup_database():
         """)
 
         # --- Indexes ---
-        cur.executescript("""
-        CREATE INDEX IF NOT EXISTS idx_part_number ON parts(part_number);
-        CREATE INDEX IF NOT EXISTS idx_catalog_name ON parts(catalog_name);
-        CREATE INDEX IF NOT EXISTS idx_catalog_type ON parts(catalog_type);
-        CREATE INDEX IF NOT EXISTS idx_page ON parts(page);
-        CREATE INDEX IF NOT EXISTS idx_part_type ON parts(part_type);
-        CREATE INDEX IF NOT EXISTS idx_category ON parts(category);
-        CREATE INDEX IF NOT EXISTS idx_oe_numbers ON parts(oe_numbers);
-        
-        -- Guide-Parts indexes
-        CREATE INDEX IF NOT EXISTS idx_guide_parts_guide_id ON guide_parts(guide_id);
-        CREATE INDEX IF NOT EXISTS idx_guide_parts_part_number ON guide_parts(part_number);
-        """)
+        indexes = [
+            # Parts indexes
+            "CREATE INDEX IF NOT EXISTS idx_part_number ON parts(part_number);",
+            "CREATE INDEX IF NOT EXISTS idx_catalog_name ON parts(catalog_name);",
+            "CREATE INDEX IF NOT EXISTS idx_catalog_type ON parts(catalog_type);",
+            "CREATE INDEX IF NOT EXISTS idx_page ON parts(page);",
+            "CREATE INDEX IF NOT EXISTS idx_part_type ON parts(part_type);",
+            "CREATE INDEX IF NOT EXISTS idx_category ON parts(category);",
+            "CREATE INDEX IF NOT EXISTS idx_oe_numbers ON parts(oe_numbers);",
+            
+            # Guide indexes
+            "CREATE INDEX IF NOT EXISTS idx_guide_parts_guide_id ON guide_parts(guide_id);",
+            "CREATE INDEX IF NOT EXISTS idx_guide_parts_part_number ON guide_parts(part_number);",
+            "CREATE INDEX IF NOT EXISTS idx_part_guides_part_id ON part_guides(part_id);",
+            "CREATE INDEX IF NOT EXISTS idx_part_guides_guide_id ON part_guides(guide_id);",
+            
+            # Image indexes
+            "CREATE INDEX IF NOT EXISTS idx_part_images_part_id ON part_images(part_id);",
+            "CREATE INDEX IF NOT EXISTS idx_part_images_filename ON part_images(image_filename);"
+        ]
+
+        for index_sql in indexes:
+            try:
+                cur.execute(index_sql)
+            except Exception as e:
+                print(f"Warning: Could not create index: {e}")
 
         conn.commit()
         conn.close()
-        print(f"Database setup complete at {db_path}")
-        print(f"Data directories created at: {data_dir}")
+        print(f"✅ Database setup complete at {db_path}")
+        print(f"📁 Data directories created at: {data_dir}")
         
     except Exception as e:
-        print(f"Database setup failed: {e}")
+        print(f"❌ Database setup failed: {e}")
         raise
 
 if __name__ == "__main__":

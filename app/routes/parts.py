@@ -1,3 +1,4 @@
+import sqlite3
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
 from pathlib import Path
@@ -16,8 +17,18 @@ guide_extractor = GuideExtractor()
 
 def row_to_dict(row):
     """Convert sqlite3.Row to dictionary"""
-    if hasattr(row, '_fields'):  # sqlite3.Row
-        return {key: row[key] for key in row._fields}
+    if row is None:
+        return {}
+    if hasattr(row, '_fields') and hasattr(row, '_asdict'):
+        try:
+            return dict(row._asdict())
+        except:
+            return {key: row[key] for key in row._fields}
+    if hasattr(row, '_fields'):
+        try:
+            return {key: row[key] for key in row._fields}
+        except (TypeError, IndexError):
+            return dict(row)
     return dict(row)
 
 def get_image_url(image_path: str) -> Optional[str]:
@@ -112,39 +123,39 @@ async def search_parts(
 @router.get("/parts/{part_id}")
 async def get_part_detail(part_id: int):
     try:
-        conn = db.get_connection()
-        cur = conn.cursor()
-        
-        cur.execute("""
-            SELECT * FROM parts WHERE id = ?
-        """, (part_id,))
-        
-        row = cur.fetchone()
-        conn.close()
-        
-        if not row:
-            raise HTTPException(404, "Part not found")
-        
-        part = row_to_dict(row)
-        
-        # Use the simplified image URL function - always return /images/filename
-        part["image_url"] = get_image_url(part.get("image_path"))
+        with db.get_connection() as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
             
-        # Parse applications
-        applications_str = part.get("applications", "")
-        part["applications"] = [
-            a.strip() for a in applications_str.split(";")
-            if a.strip()
-        ]
-        
-        return part
-        
+            cur.execute("""
+                SELECT * FROM parts WHERE id = ?
+            """, (part_id,))
+            
+            row = cur.fetchone()
+            
+            if not row:
+                raise HTTPException(404, "Part not found")
+            
+            part = row_to_dict(row)
+            
+            # Use the simplified image URL function - always return /images/filename
+            part["image_url"] = get_image_url(part.get("image_path"))
+                
+            # Parse applications
+            applications_str = part.get("applications", "")
+            part["applications"] = [
+                a.strip() for a in applications_str.split(";")
+                if a.strip()
+            ]
+            
+            return part
+            
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error fetching part {part_id}: {e}")
         raise HTTPException(500, f"Failed to fetch part: {str(e)}")
-
+    
 # -------------------------------------------------------------
 # 3) Fixed /catalogs endpoint
 # -------------------------------------------------------------
@@ -213,3 +224,168 @@ async def get_config():
         "enableTechnicalGuides": True,
         "maxSearchResults": 50
     }
+
+# -------------------------------------------------------------
+# 7) Enhanced Part Detail with Technical Guide Integration
+# -------------------------------------------------------------
+@router.get("/parts/{part_id}/enhanced")
+async def get_enhanced_part_detail(part_id: int):
+    """Get part details merged with technical guide information"""
+    try:
+        # Get basic part info
+        conn = db.get_connection()
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        
+        cur.execute("SELECT * FROM parts WHERE id = ?", (part_id,))
+        row = cur.fetchone()
+        
+        if not row:
+            raise HTTPException(404, "Part not found")
+        
+        part = row_to_dict(row)
+        
+        # Get technical guides for this part
+        cur.execute("""
+            SELECT tg.*, pg.confidence_score 
+            FROM technical_guides tg
+            JOIN part_guides pg ON tg.id = pg.guide_id
+            WHERE pg.part_id = ? AND tg.is_active = 1
+            ORDER BY pg.confidence_score DESC
+        """, (part_id,))
+        
+        guides = [dict(row) for row in cur.fetchall()]
+        conn.close()
+        
+        # Enhanced image URL
+        part["image_url"] = get_image_url(part.get("image_path"))
+        
+        # Parse applications
+        applications_str = part.get("applications", "")
+        part["applications"] = [
+            a.strip() for a in applications_str.split(";")
+            if a.strip()
+        ]
+        
+        # Merge with technical guide data
+        enhanced_data = self._merge_with_technical_guides(part, guides)
+        
+        return enhanced_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching enhanced part {part_id}: {e}")
+        raise HTTPException(500, f"Failed to fetch enhanced part: {str(e)}")
+
+def _merge_with_technical_guides(self, part: Dict, guides: List[Dict]) -> Dict:
+    """Merge part data with technical guide information"""
+    enhanced = part.copy()
+    
+    # Initialize enhanced fields
+    enhanced["introduction"] = ""
+    enhanced["usage_info"] = []
+    enhanced["specifications"] = {}
+    enhanced["cross_references"] = []
+    enhanced["technical_guides"] = []
+    
+    # Extract from part data first
+    if part.get("description"):
+        enhanced["introduction"] = part["description"]
+    
+    if part.get("applications"):
+        enhanced["usage_info"].extend(part["applications"])
+    
+    # Extract from technical guides
+    for guide in guides:
+        # Add guide to list
+        guide_summary = {
+            "id": guide["id"],
+            "display_name": guide.get("display_name", guide.get("guide_name", "")),
+            "description": guide.get("description", ""),
+            "confidence_score": guide.get("confidence_score", 0.5)
+        }
+        enhanced["technical_guides"].append(guide_summary)
+        
+        # Parse template fields if available
+        template_fields = guide.get("template_fields")
+        if template_fields and isinstance(template_fields, str):
+            try:
+                template_data = json.loads(template_fields)
+                self._merge_template_data(enhanced, template_data)
+            except:
+                pass
+    
+    # Format cross references
+    enhanced["cross_references"] = self._format_cross_references(part)
+    
+    return enhanced
+
+def _merge_template_data(self, enhanced: Dict, template_data: Dict):
+    """Merge data from guide template fields"""
+    # Merge introduction
+    if not enhanced["introduction"] and template_data.get("description"):
+        enhanced["introduction"] = template_data["description"]
+    
+    # Merge usage info
+    if template_data.get("sections"):
+        for section in template_data["sections"]:
+            if "usage" in section.get("title", "").lower() or "application" in section.get("title", "").lower():
+                enhanced["usage_info"].append(section.get("content", ""))
+    
+    # Merge specifications
+    if template_data.get("key_specifications"):
+        enhanced["specifications"].update(template_data["key_specifications"])
+    
+    # Add any additional specifications from sections
+    if template_data.get("sections"):
+        for section in template_data["sections"]:
+            if "specification" in section.get("title", "").lower():
+                # Extract key-value pairs from section content
+                specs = self._extract_specifications_from_text(section.get("content", ""))
+                enhanced["specifications"].update(specs)
+
+def _extract_specifications_from_text(self, text: str) -> Dict:
+    """Extract specifications from text content"""
+    specs = {}
+    
+    # Pattern for key-value specifications
+    patterns = [
+        r'(\w+)\s*[=:]\s*([^,\n]+)',  # key = value
+        r'([^:]+):\s*([^\n]+)',       # key: value
+    ]
+    
+    for pattern in patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            key = match.group(1).strip()
+            value = match.group(2).strip()
+            if key and value and len(key) > 2:
+                specs[key] = value
+    
+    return specs
+
+def _format_cross_references(self, part: Dict) -> List[Dict]:
+    """Format cross reference data"""
+    cross_refs = []
+    
+    # Primary part
+    cross_refs.append({
+        "oem": "Primary",
+        "part_number": part.get("part_number", ""),
+        "alias": "Main Part",
+        "compatible_vehicles": "All compatible applications"
+    })
+    
+    # OE numbers if available
+    if part.get("oe_numbers"):
+        oe_numbers = [oe.strip() for oe in part["oe_numbers"].split(";") if oe.strip()]
+        for oe in oe_numbers:
+            cross_refs.append({
+                "oem": "OEM",
+                "part_number": oe,
+                "alias": "Alternate",
+                "compatible_vehicles": "OE specification"
+            })
+    
+    return cross_refs

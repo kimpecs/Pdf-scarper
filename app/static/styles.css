@@ -1,3 +1,4 @@
+/* Enhanced Styles for Parts Catalog */
 .part-card {
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
@@ -8,11 +9,17 @@
 }
 
 .image-placeholder {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #f8fafc;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #9ca3af;
+    border: 2px dashed #e5e7eb;
+}
+
+.image-placeholder-inline {
+    background: #f8fafc;
+    border: 2px dashed #e5e7eb;
 }
 
 .fade-in {
@@ -30,10 +37,12 @@
     padding: 12px;
     transition: all 0.2s;
     cursor: pointer;
+    background: white;
 }
 
 .related-part-card:hover {
     border-color: #3b82f6;
+    background-color: #eff6ff;
     box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
     transform: translateX(4px);
 }
@@ -41,19 +50,18 @@
 .spec-item {
     display: flex;
     justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid #f3f4f6;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
 }
 
 .spec-label {
     font-weight: 600;
     color: #374151;
-    flex: 1;
 }
 
 .spec-value {
     color: #6b7280;
-    flex: 1;
     text-align: right;
 }
 
@@ -69,6 +77,12 @@
     background-color: #3b82f6 !important;
     color: white !important;
     border-color: #3b82f6 !important;
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
 }
 
 /* Custom scrollbar */
@@ -92,4 +106,110 @@
 .sticky-sidebar {
     position: sticky;
     top: 1rem;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .part-card.flex {
+        flex-direction: column;
+    }
+    
+    .part-card.flex .w-32 {
+        width: 100%;
+        height: 200px;
+    }
+}
+
+/* Image loading states */
+img {
+    transition: opacity 0.3s ease;
+}
+
+img:not([src]), img[src=""] {
+    opacity: 0;
+}
+
+/* Button enhancements */
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Card hover effects */
+.bg-white {
+    transition: box-shadow 0.3s ease;
+}
+
+.bg-white:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Search input focus */
+.search-input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Filter select styles */
+select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+/* Technical guide badges */
+.guide-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Cross reference table improvements */
+.cross-ref-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.cross-ref-table th {
+    background: #f8fafc;
+    border-bottom: 2px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+}
+
+.cross-ref-table td {
+    border-bottom: 1px solid #f3f4f6;
+}
+
+/* Animation for related parts */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.related-part-card {
+    animation: slideInRight 0.3s ease-out;
 }

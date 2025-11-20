@@ -34,16 +34,21 @@ CREATE TABLE IF NOT EXISTS technical_guides (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Guide-Parts association table (NEW)
-CREATE TABLE IF NOT EXISTS guide_parts (
+-- Replace part_guides with guide_parts for consistency
+CREATE TABLE IF NOT EXISTS part_guides (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    part_id INTEGER,
     guide_id INTEGER,
-    part_number TEXT,
     confidence_score REAL DEFAULT 1.0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (part_id) REFERENCES parts (id),
     FOREIGN KEY (guide_id) REFERENCES technical_guides (id),
-    UNIQUE(guide_id, part_number)
+    UNIQUE(part_id, guide_id)
 );
+
+-- Add indexes
+CREATE INDEX IF NOT EXISTS idx_part_guides_part_id ON part_guides(part_id);
+CREATE INDEX IF NOT EXISTS idx_part_guides_guide_id ON part_guides(guide_id);
 
 -- Full Text Search table
 CREATE VIRTUAL TABLE IF NOT EXISTS parts_fts USING fts5(

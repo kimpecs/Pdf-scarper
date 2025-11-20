@@ -1,322 +1,582 @@
-import os
-from fastapi import FastAPI, File, UploadFile, HTTPException
+# main.py
+from fastapi import FastAPI, HTTPException, Query, Depends, Request
+from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from pathlib import Path
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+from typing import List, Optional, Dict, Any
 import sqlite3
-import json
-from datetime import datetime
+import io
+from pathlib import Path
+import os
 
-# Internal imports
-from app.utils.config import settings
-from app.utils.logger import setup_logging
-from app.routes import guides, health, parts  # Import parts router
+app = FastAPI(title="Knowledge Base", version="1.0.0")
 
-# ------------------------------------------------------------------------------
-# Initialize FastAPI app
-# ------------------------------------------------------------------------------
-app = FastAPI(
-    title=settings.FRONTEND_TITLE,
-    description=settings.FRONTEND_DESCRIPTION,
-    version="1.0.0"
-)
-
-logger = setup_logging()
-
-# ------------------------------------------------------------------------------
-# CORS Setup
-# ------------------------------------------------------------------------------
-# Restrict CORS in production
-allowed_origins = ["http://localhost:3000", "https://yourdomain.com"] if not settings.DEBUG else ["*"]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"],
-)
-
-# Add file validation to upload endpoint
-ALLOWED_EXTENSIONS = {'.pdf'}
-
-@app.post("/api/upload-pdf")
-async def upload_pdf(file: UploadFile = File(...), category: str = "catalogs"):
-    file_extension = Path(file.filename).suffix.lower()
-    if file_extension not in ALLOWED_EXTENSIONS:
-        raise HTTPException(400, "Invalid file type")
-    
-# ------------------------------------------------------------------------------
-# Define data directories
-# ------------------------------------------------------------------------------
-BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"
-STATIC_DIR = BASE_DIR / "static"
-
-# Ensure directory structure
-for folder in [
-    DATA_DIR,
-    STATIC_DIR,
-    DATA_DIR / "pdfs",
-    DATA_DIR / "guides",
-    DATA_DIR / "part_images"  # All images go directly here
-]:
-    folder.mkdir(parents=True, exist_ok=True)
-
-# ------------------------------------------------------------------------------
-# Mount Static Directories
-# ------------------------------------------------------------------------------
+# Mount static files directory
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-app.mount("/pdfs", StaticFiles(directory=DATA_DIR / "pdfs"), name="pdfs")
-app.mount("/part_images", StaticFiles(directory=DATA_DIR / "part_images"), name="part_images")
-app.mount("/guides", StaticFiles(directory=DATA_DIR / "guides"), name="guides")
 
-# ------------------------------------------------------------------------------
-# Include Routers
-# ------------------------------------------------------------------------------
-app.include_router(parts.router)  # Include parts router with /api prefix
-app.include_router(guides.router, prefix="/api/guides", tags=["guides"])
-app.include_router(health.router, prefix="/api/health", tags=["health"])
+# Setup templates
+templates = Jinja2Templates(directory="app/templates")
 
-# ------------------------------------------------------------------------------
-# DB Connection Helper
-# ------------------------------------------------------------------------------
+# Serve the main page
+@app.get("/", response_class=HTMLResponse)
+async def read_root():
+    # Serve the static HTML file directly
+    html_file_path = Path("app/static/index.html")
+    if html_file_path.exists():
+        with open(html_file_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content, status_code=200)
+    else:
+        # Fallback: return a simple HTML page
+        return HTMLResponse(content="""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Parts Catalog</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                .error { color: red; }
+            </style>
+        </head>
+        <body>
+            <h1>Parts Catalog Application</h1>
+            <p class="error">Warning: index.html not found in static directory.</p>
+            <p>Please ensure your frontend files are in the correct location.</p>
+            <p><a href="/docs">API Documentation</a></p>
+        </body>
+        </html>
+        """)
+
+# Database connection
 def get_db_connection():
-    DATABASE_URL = DATA_DIR / "catalog.db"
-    conn = sqlite3.connect(DATABASE_URL)
+    db_path = Path("C:/Users/kpecco/Desktop/codes/TESTING/app/data/catalog.db")
+    conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
     return conn
 
-# ------------------------------------------------------------------------------
-# Legacy endpoints for frontend compatibility
-# ------------------------------------------------------------------------------
-@app.get("/api/search/categories")
-async def get_search_categories():
-    """Delegate to parts router"""
-    from app.routes.parts import get_categories
-    return await get_categories()
+# Pydantic Models
+class PartBase(BaseModel):
+    id: int
+    catalog_name: str
+    part_number: str
+    description: Optional[str]
+    category: Optional[str]
+    page: Optional[int]
 
-@app.get("/api/search/part_types")
-async def get_search_part_types():
-    """Delegate to parts router"""
-    from app.routes.parts import get_part_types
-    return await get_part_types()
+class PartDetail(PartBase):
+    catalog_type: Optional[str]
+    part_type: Optional[str]
+    image_path: Optional[str]
+    machine_info: Optional[str]
+    specifications: Optional[str]
+    oe_numbers: Optional[str]
+    applications: Optional[str]
+    features: Optional[str]
+    created_at: str
 
-@app.get("/api/search/catalogs")
-async def get_search_catalogs():
-    """Delegate to parts router"""
-    from app.routes.parts import get_catalogs
-    return await get_catalogs()
+class ImageInfo(BaseModel):
+    id: int
+    image_filename: str
+    image_type: str
+    image_width: int
+    image_height: int
+    file_size: int
+    page_number: int
+    confidence: float
 
-# ------------------------------------------------------------------------------
-# LEGACY SEARCH ENDPOINT - For frontend compatibility
-# ------------------------------------------------------------------------------
-@app.get("/search")
-async def legacy_search(
-    q: str = "",
-    category: str = "",
-    partType: str = "",
-    catalogType: str = "",
-    limit: int = 50
+class TechnicalGuide(BaseModel):
+    id: int
+    guide_name: str
+    display_name: str
+    description: Optional[str]
+    category: Optional[str]
+    pdf_path: Optional[str]
+    is_active: bool
+    part_count: int
+
+class SearchResponse(BaseModel):
+    parts: List[PartBase]
+    total_count: int
+    page: int
+    page_size: int
+
+# NEW: Enhanced search endpoint that matches frontend requirements
+@app.get("/api/search")
+async def api_search_parts(
+    q: str = Query("", min_length=0),
+    category: str = Query(""),
+    part_type: str = Query(""),
+    catalog_type: str = Query(""),
+    limit: int = Query(50, ge=1, le=200)
+    
 ):
-    """
-    Legacy endpoint that maps old parameter names to new ones
-    This handles the frontend calls to /search?partType=...&catalogType=...
-    """
-    # Import and use the search_parts function from parts router
-    from app.routes.parts import search_parts
-    return await search_parts(
-        q=q,
-        category=category,
-        part_type=partType,  # Map partType → part_type
-        catalog_type=catalogType,  # Map catalogType → catalog_type
-        limit=limit
-    )
-
-# ------------------------------------------------------------------------------
-# Technical Guides List
-# ------------------------------------------------------------------------------
-@app.get("/technical-guides")
-async def get_technical_guides():
+    conn = get_db_connection()
     try:
-        with get_db_connection() as conn:
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM technical_guides WHERE is_active = 1")
-            guides = [dict(r) for r in cur.fetchall()]
-            return {"guides": guides}
-    except Exception as e:
-        logger.error(f"Database error: {e}")
-        return {"guides": []}
+        where_conditions = []
+        params = []
+        
+        # Handle search query
+        if q and q.strip():
+            # Simple LIKE search for part number and description
+            where_conditions.append("(p.part_number LIKE ? OR p.description LIKE ?)")
+            search_term = f"%{q}%"
+            params.extend([search_term, search_term])
+        
+        # Handle filters
+        if category and category.strip():
+            where_conditions.append("p.category = ?")
+            params.append(category)
+            
+        if part_type and part_type.strip():
+            where_conditions.append("p.part_type = ?")
+            params.append(part_type)
+            
+        if catalog_type and catalog_type.strip():
+            where_conditions.append("p.catalog_name = ?")
+            params.append(catalog_type)
+        
+        where_clause = f"WHERE {' AND '.join(where_conditions)}" if where_conditions else ""
+        
+        # Build query
+        query = f"""
+            SELECT p.*,
+                   (SELECT COUNT(*) FROM part_images pi WHERE pi.part_id = p.id) as image_count
+            FROM parts p
+            {where_clause}
+            ORDER BY p.part_number
+            LIMIT ?
+        """
+        params.append(limit)
+        
+        parts = conn.execute(query, params).fetchall()
+        
+        return {
+            "query": q,
+            "results": [dict(part) for part in parts],
+            "count": len(parts)
+        }
+    finally:
+        conn.close()
 
-# ------------------------------------------------------------------------------
-# Part Guides Endpoint (app.js expects this)
-# ------------------------------------------------------------------------------
-@app.get("/api/parts/{part_id}/guides")
+# NEW: API endpoint for categories analytics
+@app.get("/api/analytics/categories")
+async def api_get_categories():
+    conn = get_db_connection()
+    try:
+        categories = conn.execute("""
+            SELECT 
+                category,
+                COUNT(*) as part_count
+            FROM parts
+            WHERE category IS NOT NULL AND category != ''
+            GROUP BY category
+            ORDER BY part_count DESC
+        """).fetchall()
+        
+        return [{"category": cat['category'], "part_count": cat['part_count']} for cat in categories]
+    finally:
+        conn.close()
+
+# NEW: API endpoint for catalogs analytics
+@app.get("/api/analytics/catalogs")
+async def api_get_catalogs():
+    conn = get_db_connection()
+    try:
+        catalogs = conn.execute("""
+            SELECT 
+                catalog_name,
+                COUNT(*) as part_count
+            FROM parts
+            WHERE catalog_name IS NOT NULL AND catalog_name != ''
+            GROUP BY catalog_name
+            ORDER BY part_count DESC
+        """).fetchall()
+        
+        return [{"catalog_name": cat['catalog_name'], "part_count": cat['part_count']} for cat in catalogs]
+    finally:
+        conn.close()
+
+# Parts Endpoints
+@app.get("/parts", response_model=SearchResponse)
+async def get_parts(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=1000),
+    catalog: Optional[str] = None,
+    category: Optional[str] = None
+):
+    conn = get_db_connection()
+    try:
+        offset = (page - 1) * page_size
+        
+        where_conditions = []
+        params = []
+        
+        if catalog:
+            where_conditions.append("catalog_name = ?")
+            params.append(catalog)
+        
+        if category:
+            where_conditions.append("category = ?")
+            params.append(category)
+        
+        where_clause = f"WHERE {' AND '.join(where_conditions)}" if where_conditions else ""
+        
+        # Get total count
+        count_query = f"SELECT COUNT(*) FROM parts {where_clause}"
+        total_count = conn.execute(count_query, params).fetchone()[0]
+        
+        # Get paginated results
+        query = f"""
+            SELECT p.*, 
+                   (SELECT COUNT(*) FROM part_images pi WHERE pi.part_id = p.id) as image_count,
+                   (SELECT COUNT(*) FROM part_guides pg WHERE pg.part_id = p.id) as guide_count
+            FROM parts p
+            {where_clause}
+            ORDER BY p.id
+            LIMIT ? OFFSET ?
+        """
+        params.extend([page_size, offset])
+        
+        parts = conn.execute(query, params).fetchall()
+        
+        return SearchResponse(
+            parts=[dict(part) for part in parts],
+            total_count=total_count,
+            page=page,
+            page_size=page_size
+        )
+    finally:
+        conn.close()
+
+@app.get("/parts/{part_id}", response_model=PartDetail)
+async def get_part(part_id: int):
+    conn = get_db_connection()
+    try:
+        part = conn.execute("SELECT * FROM parts WHERE id = ?", (part_id,)).fetchone()
+        if not part:
+            raise HTTPException(status_code=404, detail="Part not found")
+        return dict(part)
+    finally:
+        conn.close()
+
+# NEW: API endpoint for part details (used by frontend)
+@app.get("/api/parts/{part_id}")
+async def api_get_part(part_id: int):
+    conn = get_db_connection()
+    try:
+        part = conn.execute("SELECT * FROM parts WHERE id = ?", (part_id,)).fetchone()
+        if not part:
+            raise HTTPException(status_code=404, detail="Part not found")
+        return dict(part)
+    finally:
+        conn.close()
+
+@app.get("/parts/search/{part_number}")
+async def search_part_by_number(part_number: str):
+    conn = get_db_connection()
+    try:
+        parts = conn.execute("""
+            SELECT p.*, 
+                   GROUP_CONCAT(DISTINCT pi.image_filename) as images,
+                   GROUP_CONCAT(DISTINCT tg.display_name) as guides
+            FROM parts p
+            LEFT JOIN part_images pi ON p.id = pi.part_id
+            LEFT JOIN part_guides pg ON p.id = pg.part_id
+            LEFT JOIN technical_guides tg ON pg.guide_id = tg.id
+            WHERE p.part_number = ?
+            GROUP BY p.id
+        """, (part_number,)).fetchall()
+        
+        if not parts:
+            raise HTTPException(status_code=404, detail="Part not found")
+        
+        return [dict(part) for part in parts]
+    finally:
+        conn.close()
+
+@app.get("/parts/{part_id}/images")
+async def get_part_images(part_id: int):
+    conn = get_db_connection()
+    try:
+        images = conn.execute("""
+            SELECT * FROM part_images 
+            WHERE part_id = ? 
+            ORDER BY confidence DESC, created_at DESC
+        """, (part_id,)).fetchall()
+        
+        return [dict(image) for image in images]
+    finally:
+        conn.close()
+
+@app.get("/images/{image_id}/data")
+async def get_image_data(image_id: int):
+    conn = get_db_connection()
+    try:
+        image = conn.execute("""
+            SELECT image_data, image_type 
+            FROM part_images 
+            WHERE id = ?
+        """, (image_id,)).fetchone()
+        
+        if not image:
+            raise HTTPException(status_code=404, detail="Image not found")
+        
+        return StreamingResponse(
+            io.BytesIO(image['image_data']),
+            media_type=f"image/{image['image_type']}",
+            headers={"Content-Disposition": f"filename=image_{image_id}.{image['image_type']}"}
+        )
+    finally:
+        conn.close()
+
+# Guides Endpoints
+@app.get("/guides", response_model=List[TechnicalGuide])
+async def get_guides(active_only: bool = True):
+    conn = get_db_connection()
+    try:
+        query = """
+            SELECT tg.*,
+                   COUNT(pg.part_id) as part_count
+            FROM technical_guides tg
+            LEFT JOIN part_guides pg ON tg.id = pg.guide_id
+        """
+        
+        if active_only:
+            query += " WHERE tg.is_active = 1"
+            
+        query += " GROUP BY tg.id ORDER BY tg.display_name"
+        
+        guides = conn.execute(query).fetchall()
+        return [dict(guide) for guide in guides]
+    finally:
+        conn.close()
+
+@app.get("/guides/{guide_id}")
+async def get_guide(guide_id: int):
+    conn = get_db_connection()
+    try:
+        guide = conn.execute("SELECT * FROM technical_guides WHERE id = ?", (guide_id,)).fetchone()
+        if not guide:
+            raise HTTPException(status_code=404, detail="Guide not found")
+        
+        # Get associated parts
+        parts = conn.execute("""
+            SELECT p.*, pg.confidence_score
+            FROM parts p
+            JOIN part_guides pg ON p.id = pg.part_id
+            WHERE pg.guide_id = ?
+            ORDER BY pg.confidence_score DESC
+        """, (guide_id,)).fetchall()
+        
+        return {
+            "guide": dict(guide),
+            "associated_parts": [dict(part) for part in parts],
+            "part_count": len(parts)
+        }
+    finally:
+        conn.close()
+
+@app.get("/parts/{part_id}/guides")
 async def get_part_guides(part_id: int):
-    """Endpoint that app.js expects for part technical guides"""
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT tg.* FROM technical_guides tg
+        guides = conn.execute("""
+            SELECT tg.*, pg.confidence_score
+            FROM technical_guides tg
             JOIN part_guides pg ON tg.id = pg.guide_id
             WHERE pg.part_id = ?
-        """, (part_id,))
-        guides = [dict(r) for r in cur.fetchall()]
+            ORDER BY pg.confidence_score DESC
+        """, (part_id,)).fetchall()
+        
+        return [dict(guide) for guide in guides]
+    finally:
         conn.close()
-        
-        # Format guides as expected by frontend
-        formatted_guides = []
-        for guide in guides:
-            # Parse sections and key_specifications if they are JSON strings
-            sections = guide.get("sections", [])
-            if isinstance(sections, str):
-                try:
-                    sections = json.loads(sections)
-                except:
-                    sections = []
-            
-            key_specifications = guide.get("key_specifications", {})
-            if isinstance(key_specifications, str):
-                try:
-                    key_specifications = json.loads(key_specifications)
-                except:
-                    key_specifications = {}
-            
-            formatted_guides.append({
-                "id": guide["id"],
-                "display_name": guide.get("name", guide.get("display_name", "Technical Guide")),
-                "description": guide.get("description", ""),
-                "confidence_score": float(guide.get("confidence_score", 0.9)),
-                "sections": sections,
-                "key_specifications": key_specifications
-            })
-        
-        return {"guides": formatted_guides}
-    except Exception as e:
-        logger.error(f"Error getting guides for part {part_id}: {e}")
-        return {"guides": []}
 
-# ------------------------------------------------------------------------------
-# Upload PDF endpoint
-# ------------------------------------------------------------------------------
-@app.post("/api/upload-pdf")
-async def upload_pdf(file: UploadFile = File(...), category: str = "catalogs"):
+# Search Endpoints
+@app.get("/search")
+async def search_parts(
+    q: str = Query(..., min_length=2),
+    limit: int = Query(50, ge=1, le=200)
+):
+    conn = get_db_connection()
     try:
-        temp_path = f"/tmp/{file.filename}"
-        with open(temp_path, "wb") as f:
-            f.write(await file.read())
+        # FTS search
+        parts = conn.execute("""
+            SELECT p.*, 
+                   snippet(parts_fts, 2, '<b>', '</b>', '...', 64) as snippet
+               FROM parts_fts
+               JOIN parts p ON p.id = parts_fts.rowid
+               WHERE parts_fts MATCH ?
+               ORDER BY rank
+               LIMIT ?
+        """, (f'"{q}"*', limit)).fetchall()
+        
+        return {
+            "query": q,
+            "results": [dict(part) for part in parts],
+            "count": len(parts)
+        }
+    finally:
+        conn.close()
 
-        os.unlink(temp_path)
-        return {"file_key": file.filename, "message": "Upload processed"}
+# Analytics Endpoints
+@app.get("/analytics/catalogs")
+async def get_catalog_analytics():
+    conn = get_db_connection()
+    try:
+        catalogs = conn.execute("""
+            SELECT 
+                catalog_name,
+                COUNT(*) as part_count,
+                COUNT(DISTINCT part_number) as unique_part_numbers,
+                COUNT(DISTINCT category) as category_count,
+                ROUND(COUNT(image_path) * 100.0 / COUNT(*), 2) as image_coverage_percent
+            FROM parts
+            GROUP BY catalog_name
+            ORDER BY part_count DESC
+        """).fetchall()
+        
+        return [dict(catalog) for catalog in catalogs]
+    finally:
+        conn.close()
 
+@app.get("/analytics/categories")
+async def get_category_analytics():
+    conn = get_db_connection()
+    try:
+        categories = conn.execute("""
+            SELECT 
+                category,
+                COUNT(*) as part_count,
+                ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM parts), 2) as percentage
+            FROM parts
+            WHERE category IS NOT NULL AND category != ''
+            GROUP BY category
+            ORDER BY part_count DESC
+        """).fetchall()
+        
+        return [dict(category) for category in categories]
+    finally:
+        conn.close()
+
+@app.get("/analytics/dashboard")
+async def get_dashboard_stats():
+    conn = get_db_connection()
+    try:
+        stats = conn.execute("""
+            SELECT 
+                (SELECT COUNT(*) FROM parts) as total_parts,
+                (SELECT COUNT(*) FROM part_images) as total_images,
+                (SELECT COUNT(*) FROM technical_guides) as total_guides,
+                (SELECT COUNT(*) FROM part_guides) as total_associations,
+                (SELECT COUNT(*) FROM parts WHERE image_path IS NOT NULL) as parts_with_image_reference,
+                (SELECT COUNT(DISTINCT part_id) FROM part_images) as unique_parts_with_images
+        """).fetchone()
+        
+        return dict(stats)
+    finally:
+        conn.close()
+
+# Association Management
+@app.post("/associations")
+async def create_association(part_id: int, guide_id: int, confidence: float = 1.0):
+    conn = get_db_connection()
+    try:
+        conn.execute("""
+            INSERT OR IGNORE INTO part_guides (part_id, guide_id, confidence_score)
+            VALUES (?, ?, ?)
+        """, (part_id, guide_id, confidence))
+        conn.commit()
+        
+        return {"message": "Association created successfully"}
     except Exception as e:
-        logger.error(e)
-        raise HTTPException(500, str(e))
+        conn.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        conn.close()
 
-# ------------------------------------------------------------------------------
-# SPA Frontend
-# ------------------------------------------------------------------------------
-@app.get("/")
-async def serve_frontend():
-    index_path = STATIC_DIR / "index.html"
-    if not index_path.exists():
-        return {"error": "index.html missing"}
-    return FileResponse(index_path)
-
-@app.get("/guides/{path:path}")
-async def serve_guides_spa(path: str):
-    return FileResponse(STATIC_DIR / "index.html")
-
-# ------------------------------------------------------------------------------
-# Root-level Image Fallback Handler
-# ------------------------------------------------------------------------------
-import re
-
-def normalize_image_filename(filename: str) -> str:
-    """
-    Normalize image filename by removing leading zeros from numeric suffixes
-    Example: img010.png -> img10.png, Stemco_Gaff_p52_img010.png -> Stemco_Gaff_p52_img10.png
-    """
-    name, ext = os.path.splitext(filename)
-    
-    # Pattern to find numeric suffixes after the last underscore
-    # Matches patterns like: _img010, _img001, etc.
-    pattern = r'(_[a-zA-Z]*)0+(\d+)$'
-    match = re.search(pattern, name)
-    
-    if match:
-        prefix = match.group(1)  # _img
-        num = match.group(2)     # 10
-        normalized_suffix = f"{prefix}{num}"
-        # Replace the original suffix with normalized one
-        normalized_name = name[:match.start()] + normalized_suffix
-        return f"{normalized_name}{ext}"
-    
-    return filename
-
-@app.get("/{filename:path}")
-async def root_image_fallback(filename: str):
-    image_extensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp']
-    
-    if any(filename.lower().endswith(ext) for ext in image_extensions):
-        # Try original filename first
-        image_path = DATA_DIR / "part_images" / filename
-        if image_path.exists():
-            return FileResponse(image_path)
+@app.delete("/associations")
+async def delete_association(part_id: int, guide_id: int):
+    conn = get_db_connection()
+    try:
+        conn.execute("""
+            DELETE FROM part_guides 
+            WHERE part_id = ? AND guide_id = ?
+        """, (part_id, guide_id))
+        conn.commit()
         
-        # Try normalized filename (without leading zeros)
-        normalized_name = normalize_image_filename(filename)
-        if normalized_name != filename:
-            normalized_path = DATA_DIR / "part_images" / normalized_name
-            if normalized_path.exists():
-                return FileResponse(normalized_path)
-        
-        # Fallback: check all extensions with normalized base name
-        base_name = normalize_image_filename(Path(filename).stem)
-        for ext in image_extensions:
-            alt_path = DATA_DIR / "part_images" / f"{base_name}{ext}"
-            if alt_path.exists():
-                return FileResponse(alt_path)
-        
-        raise HTTPException(status_code=404, detail="Image not found")
-    
-    raise HTTPException(status_code=404, detail="Not found")
+        return {"message": "Association deleted successfully"}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        conn.close()
 
-# ------------------------------------------------------------------------------
-# Health Check Endpoint (for frontend compatibility)
-# ------------------------------------------------------------------------------
-@app.get("/api/health")
-async def health_check():
+@app.get("/api/config")
+async def get_config():
     return {
-        "status": "healthy", 
-        "service": "parts-catalog",
-        "timestamp": datetime.utcnow().isoformat()
+        "maxDescriptionLength": 120,
+        "maxApplicationsDisplay": 2,
+        "searchDebounceMs": 300,
+        "enableTechnicalGuides": True,
+        "maxSearchResults": 50
     }
 
-# ------------------------------------------------------------------------------
-# Startup Event
-# ------------------------------------------------------------------------------
-@app.on_event("startup")
-async def startup():
-    logger.info("API Ready.")
-    
-    # Log normalized image names for debugging
-    images_dir = DATA_DIR / "part_images"
-    if images_dir.exists():
-        image_files = []
-        for pattern in ["*.png", "*.jpg", "*.jpeg"]:
-            image_files.extend(images_dir.glob(pattern))
+@app.get("/api/parts/types")
+async def get_part_types():
+    conn = get_db_connection()
+    try:
+        part_types = conn.execute("""
+            SELECT DISTINCT part_type FROM parts 
+            WHERE part_type IS NOT NULL AND part_type != ''
+            ORDER BY part_type
+        """).fetchall()
+        return {"part_types": [pt[0] for pt in part_types]}
+    finally:
+        conn.close()
+
+@app.get("/api/images/{part_id}")
+async def get_part_image(part_id: int):
+    conn = get_db_connection()
+    try:
+        image = conn.execute("""
+            SELECT image_data, image_type 
+            FROM part_images 
+            WHERE part_id = ? 
+            ORDER BY confidence DESC 
+            LIMIT 1
+        """, (part_id,)).fetchone()
         
-        logger.info(f"Found {len(image_files)} images in part_images directory")
-        if image_files:
-            normalized_samples = [normalize_image_filename(f.name) for f in image_files[:5]]
-            logger.info(f"Normalized sample images: {normalized_samples}")
-            
-# ------------------------------------------------------------------------------
-# Entrypoint
-# ------------------------------------------------------------------------------
+        if not image:
+            raise HTTPException(status_code=404, detail="Image not found")
+        
+        return StreamingResponse(
+            io.BytesIO(image['image_data']),
+            media_type=f"image/{image['image_type']}",
+            headers={"Content-Disposition": f"inline; filename=part_{part_id}.{image['image_type']}"}
+        )
+    finally:
+        conn.close()
+
+# NEW: API endpoint for part guides (used by frontend)
+@app.get("/api/parts/{part_id}/guides")
+async def api_get_part_guides(part_id: int):
+    conn = get_db_connection()
+    try:
+        guides = conn.execute("""
+            SELECT tg.*, pg.confidence_score
+            FROM technical_guides tg
+            JOIN part_guides pg ON tg.id = pg.guide_id
+            WHERE pg.part_id = ?
+            ORDER BY pg.confidence_score DESC
+        """, (part_id,)).fetchall()
+        
+        return [dict(guide) for guide in guides]
+    finally:
+        conn.close()
+
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
