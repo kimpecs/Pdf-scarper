@@ -50,6 +50,10 @@ PART_NUMBER_PATTERNS = [
     (r'\b(CH\d{4})\b', 'kit'),
     (r'\b([A-Z0-9]+/[A-Z0-9]+)\b', 'part'),
     
+    # FortPro part numbers: F followed by 6 digits (e.g. F235150)
+    (r'\bFortproUSA#:\s*(F\d{6}(?:-\d+)?)\b', 'part'),
+    (r'\b(F\d{6}(?:-\d+)?)\b', 'part'),
+
     # Pacific Truck transmission assembly patterns
     (r'\b(TA-[A-Z0-9]+-\d+[A-Z]?)\b', 'part'),
     (r'\b(RTLO?-\d+[A-Z]*\*?)\b', 'part'),
@@ -153,72 +157,7 @@ PART_NUMBER_PATTERNS = [
     (r'\b(\d{10})\b', 'part'),
     (r'\b(\d{4}[A-Z]\d{4})\b', 'part'),
     (r'\b(\d{2}KH\d{4}[A-Z]?\d?)\b', 'part'),
-(r'\b(BRAKE.*?(?:[A-Z]{2,3}-\d{4}|MAK\s+[\dA-Z]+))\b', 'brake'),
-    (r'\b(CALIPER.*?(?:[A-Z]{2,3}-\d{4}|MAK\s+[\dA-Z]+))\b', 'caliper'),
-    (r'\b(\d{6}(?:[.-]\d+)?)\b', 'part'),
-    (r'\b(V\d+[A-Z0-9]+)\b', 'part'),
-    (r'\b(?:Kit|Complete pair|Mirror.*Kit|Assembly|Bracket.*Kit).*?\b(\d{6}(?:[.-]\d+)?|V\d+[A-Z0-9]+)\b', 'kit'),
-    (r'\b(?:Bracket.*Only|Bracket Assembly).*?\b(\d{6}(?:[.-]\d+)?|V\d+[A-Z0-9]+)\b', 'bracket'),
-    (r'\b(?:Replacement|Glass Kit|Head.*Only|Actuator|Cover|Motor|Switch|Harness).*?\b(\d{6}(?:[.-]\d+)?|V\d+[A-Z0-9]+)\b', 'replacement'),
-    (r'\b(?:Accessories|Marker Light|Clamp.*Kit).*?\b(\d{6}(?:[.-]\d+)?|V\d+[A-Z0-9]+)\b', 'accessory'),
-    (r'\b([A-Z]{1,4}\d{2,4}(?:-\d+)?[A-Z]?)\b', 'part'),
-    (r'\b(\d{5,7}[A-Z]?)\b', 'part'),
-    (r'\b([A-Z]{2,}-[A-Z0-9]+(?:-[A-Z0-9]+)?)\b', 'part'),
-    (r'\b(?:KIT|PK)[-_]?(\d+[A-Z]?)\b', 'kit'),
-    (r'\b([A-Z]?\d+[A-Z]+|[A-Z]+\d+[A-Z]*)\b', 'model'),
-    (r'\b(600-\d{3,4}[A-Z]?)\b', 'caliper'),
-    (r'\b(CH\d{4})\b', 'kit'),
-    (r'\b([A-Z0-9]+/[A-Z0-9]+)\b', 'part'),
-    
-    # Pacific Truck transmission assembly patterns
-    (r'\b(TA-[A-Z0-9]+-\d+[A-Z]?)\b', 'part'),
-    (r'\b(RTLO?-\d+[A-Z]*\*?)\b', 'part'),
-    (r'\b(FR0?-\d+[A-Z]*)\b', 'part'),
-    (r'\b(FS-\d+[A-Z]*)\b', 'part'),
-    
-    # Pacific Truck kit patterns (from transmission kits)
-    (r'\b(K-\d{4})\b', 'kit'),
-    (r'\b(\d{3}-\d{3}-\d+X)\b', 'kit'),
-    (r'\b(HD Transmission Kit)\b', 'kit'),
-    
-    # Pacific Truck transmission parts
-    (r'\b([A-Z]\d{4,5})\b', 'part'),
-    (r'\b([A-Z]\d{2}-\d{4})\b', 'part'),
-    (r'\b([A-Z]-\d{4})\b', 'part'),
-    (r'\b(S\d{4}[A-Z]?)\b', 'part'),
-    (r'\b(X\d{2}-\d{4})\b', 'part'),
-    
-    # Pacific Truck clutch assemblies
-    (r'\b(\d{6}-\d{2}[AM]?[0-9]?)\b', 'part'),
-    (r'\b(MU\d{5,6}-[A-Z0-9]+)\b', 'part'),
-    (r'\b(AN\d{6,7}-[A-Z0-9]+)\b', 'part'),
-    (r'\b(NMU\d{3}-\d{3}-\d)\b', 'part'),
-    
-    # Pacific Truck Eaton clutch patterns
-    (r'\b(\d{6}-\d)\b', 'part'),
-    (r'\b(MU-\d{5}-\d)\b', 'part'),
-    
-    # Pacific Truck flywheel patterns
-    (r'\b(\d{7})\b', 'part'),
-    (r'\b(\d{8}[A-Z]?)\b', 'part'),
-    (r'\b(\d{9}[A-Z]?)\b', 'part'),
-    
-    # Pacific Truck pilot bearing patterns
-    (r'\b(TK\d{3}[A-Z]{2})\b', 'part'),
-    (r'\b(TK\d{3}[A-Z]{3})\b', 'part'),
-    
-    # Pacific Truck clutch brake patterns
-    (r'\b(TKW-\d{4})\b', 'part'),
-    (r'\b([A-Z]{2}T\d{3})\b', 'part'),
-    (r'\b(BK\d{3})\b', 'part'),
-    (r'\b(SB\d{3})\b', 'part'),
-    
-    # Pacific Truck accessories
-    (r'\b([A-Z]{2}S\d{3})\b', 'part'),
-    (r'\b(M-[A-Z]\d{2,3})\b', 'part'),
-    (r'\b(\d{3}C-\d+)\b', 'part'),
-    (r'\b(CIT\d{3}[A-Z]?)\b', 'part'),
-    
+
     # NELSON EXHAUST SPECIFIC PATTERNS
     # Basic part number patterns (most common)
     (r'\b(\d{5,6}[A-Z]?)\b', 'part'),  # 5-6 digit numbers like 0123D, 89005C, 89778K
@@ -342,7 +281,7 @@ CATALOG_INDICATORS = {
     'velvac': ['velvac', 'mirror', 'west coast', 'convex', 'hood mount', 'rear cross view', '2020 System', '2020XG', 'DuraBall'],
     'dayton': ['dayton', 'hydraulic brake'],
     'caterpillar': ['caterpillar', 'cat ', 'fp-'],
-    'fort_pro': ['fort pro', 'fortpro', 'heavy duty'],
+    'fort_pro': ['fort pro', 'fortpro', 'fortprousA', 'heavy duty truck', 'lighting'],
     'dana_spicer': ['dana', 'spicer', 'axle'],
     'cummins': ['cummins', 'engine'],
     'detroit': ['detroit diesel'],

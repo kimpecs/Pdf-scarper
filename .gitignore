@@ -30,3 +30,10 @@ build/
 # Log files
 *.log
 logs/
+# FAISS index (large binary, rebuild with build_index.py)
+app/data/faiss.index
+app/data/faiss_ids.npy
+app/data/part_images/
+
+# Claude internal data
+.claude/

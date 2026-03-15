@@ -1,6 +1,5 @@
-# Create a docker-compose.yml file in your project root
-cat > docker-compose.yml << 'EOF'
 version: '3.8'
+
 services:
   postgres:
     image: postgres:15
@@ -13,7 +12,24 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./app/data:/app/app/data
+    restart: unless-stopped
 
 volumes:
   postgres_data:
-EOF

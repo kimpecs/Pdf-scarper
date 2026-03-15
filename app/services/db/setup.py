@@ -3,7 +3,7 @@ from pathlib import Path
 import sqlite3
 
 # Add project root to Python path
-project_root = Path(__file__).resolve().parent  # Points to TESTING directory
+project_root = Path(__file__).resolve().parent.parent.parent.parent  # project root
 sys.path.insert(0, str(project_root))
 
 def setup_database():

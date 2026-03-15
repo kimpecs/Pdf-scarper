@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from typing import Optional  
 from dotenv import load_dotenv
-from fastapi import File, UploadFile  
 
 load_dotenv()
 
@@ -24,11 +23,11 @@ class Settings:
     MAX_PDF_PAGES = int(os.getenv("MAX_PDF_PAGES", "1000"))
     IMAGE_DPI = int(os.getenv("IMAGE_DPI", "150"))
     
-    # Paths - FIXED: Use correct base directory
-    BASE_DIR = Path(__file__).parent.parent  
-    DATA_DIR = Path(os.getenv('DATA_DIR', './data'))
+    # Paths - BASE_DIR = app/, DATA_DIR = app/data/
+    BASE_DIR = Path(__file__).parent.parent
+    DATA_DIR = Path(os.getenv('DATA_DIR', str(Path(__file__).parent.parent / 'data')))
     STATIC_DIR = BASE_DIR / "static"
-    DB_PATH = Path(r"C:\Users\kpecco\Desktop\codes\TESTING\app\data\catalog.db")
+    DB_PATH = DATA_DIR / "catalog.db"
     
     # Templates
     TEMPLATES_DIR = BASE_DIR / "templates"
@@ -67,5 +66,17 @@ class Settings:
     
     MSSQL_CONNECTION_STRING = os.getenv('MSSQL_CONNECTION_STRING', '')
     MSSQL_DATABASE = os.getenv('MSSQL_DATABASE', 'ApelloKbDev')
+
+    # PostgreSQL (Phase 2)
+    # Set POSTGRES_DSN in .env to activate; falls back to SQLite for local dev.
+    POSTGRES_DSN: Optional[str] = os.getenv('POSTGRES_DSN')
+
+    @property
+    def active_database_url(self) -> str:
+        """Returns the SQLAlchemy connection string to use."""
+        if self.POSTGRES_DSN:
+            return self.POSTGRES_DSN
+        # SQLite fallback — absolute path prevents cwd surprises
+        return f"sqlite:///{self.DB_PATH}"
 
 settings = Settings()

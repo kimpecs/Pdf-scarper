@@ -10,13 +10,38 @@ import io
 from pathlib import Path
 import os
 
-app = FastAPI(title="Knowledge Base", version="1.0.0")
+from app.utils.config import settings
+from app.routes import health, parts
+from app.routes import search_v2, admin
+from app.middleware.audit_log import AuditLogMiddleware, set_session_factory
 
-# Mount static files directory
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app = FastAPI(title="Larry — LIG Parts Intelligence", version="2.0.0")
 
-# Setup templates
-templates = Jinja2Templates(directory="app/templates")
+# ── Audit log middleware (Phase 2) ────────────────────────────────────────
+# Wire up the SQLAlchemy session factory so the middleware can write audit rows.
+# Wrapped in try/except so the app still boots if the DB isn't migrated yet.
+try:
+    from app.services.db.session import session_factory
+    set_session_factory(session_factory())
+except Exception:
+    pass  # Audit writes will be silently skipped until DB is ready
+
+app.add_middleware(AuditLogMiddleware)
+
+# Register routers
+app.include_router(health.router)
+app.include_router(parts.router)
+app.include_router(search_v2.router)   # Phase 3: NLP search
+app.include_router(admin.router)       # Phase 3: alias review queue
+
+# Mount static files using absolute paths so the app works regardless of cwd
+_static_dir = settings.STATIC_DIR
+_templates_dir = settings.TEMPLATES_DIR
+
+if _static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
+
+templates = Jinja2Templates(directory=str(_templates_dir))
 
 # Serve the main page
 @app.get("/", response_class=HTMLResponse)
@@ -50,7 +75,11 @@ async def read_root():
 
 # Database connection
 def get_db_connection():
-    db_path = Path("C:/Users/kpecco/Desktop/codes/TESTING/app/data/catalog.db")
+    db_path = settings.DB_PATH
+    if not db_path.is_absolute():
+        project_root = Path(__file__).resolve().parent.parent
+        db_path = project_root / db_path
+    db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
     return conn
@@ -314,18 +343,25 @@ async def get_image_data(image_id: int):
     conn = get_db_connection()
     try:
         image = conn.execute("""
-            SELECT image_data, image_type 
-            FROM part_images 
+            SELECT image_path, image_type
+            FROM part_images
             WHERE id = ?
         """, (image_id,)).fetchone()
-        
+
         if not image:
             raise HTTPException(status_code=404, detail="Image not found")
-        
+
+        img_path = Path(image['image_path'])
+        if not img_path.is_absolute():
+            img_path = Path(__file__).resolve().parent.parent / img_path
+        if not img_path.exists():
+            raise HTTPException(status_code=404, detail="Image file not found on disk")
+
+        img_type = image['image_type'] or "png"
         return StreamingResponse(
-            io.BytesIO(image['image_data']),
-            media_type=f"image/{image['image_type']}",
-            headers={"Content-Disposition": f"filename=image_{image_id}.{image['image_type']}"}
+            open(img_path, "rb"),
+            media_type=f"image/{img_type}",
+            headers={"Content-Disposition": f"filename=image_{image_id}.{img_type}"}
         )
     finally:
         conn.close()
@@ -541,20 +577,27 @@ async def get_part_image(part_id: int):
     conn = get_db_connection()
     try:
         image = conn.execute("""
-            SELECT image_data, image_type 
-            FROM part_images 
-            WHERE part_id = ? 
-            ORDER BY confidence DESC 
+            SELECT image_path, image_type
+            FROM part_images
+            WHERE part_id = ?
+            ORDER BY confidence DESC
             LIMIT 1
         """, (part_id,)).fetchone()
-        
+
         if not image:
             raise HTTPException(status_code=404, detail="Image not found")
-        
+
+        img_path = Path(image['image_path'])
+        if not img_path.is_absolute():
+            img_path = Path(__file__).resolve().parent.parent / img_path
+        if not img_path.exists():
+            raise HTTPException(status_code=404, detail="Image file not found on disk")
+
+        img_type = image['image_type'] or "png"
         return StreamingResponse(
-            io.BytesIO(image['image_data']),
-            media_type=f"image/{image['image_type']}",
-            headers={"Content-Disposition": f"inline; filename=part_{part_id}.{image['image_type']}"}
+            open(img_path, "rb"),
+            media_type=f"image/{img_type}",
+            headers={"Content-Disposition": f"inline; filename=part_{part_id}.{img_type}"}
         )
     finally:
         conn.close()

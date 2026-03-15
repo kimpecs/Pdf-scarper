@@ -1,282 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Knowledge Base - Parts Catalog</title>
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-
-    <!-- FIXED: Removed Jinja2. Use direct static path -->
-    <link rel="stylesheet" href="/static/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Larry — LIG Parts Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/static/styles.css">
 </head>
+<body>
 
-<body class="bg-gray-50">
-
-    <!-- Navigation -->
-    <nav class="bg-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-tools text-blue-600 text-2xl"></i>
-                    <h1 class="text-xl font-bold text-gray-800">Knowledge Base</h1>
-                </div>
-                <div class="flex space-x-4">
-                    <a href="/" class="text-gray-600 hover:text-blue-600 font-medium">Home</a>
-                    <a href="#search" class="text-gray-600 hover:text-blue-600 font-medium">Search</a>
-                    <a href="#guides" class="text-gray-600 hover:text-blue-600 font-medium">Technical Guides</a>
-                </div>
-            </div>
+  <!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-logo">
+          <span class="brand-lig">LIG</span>
+          <span class="brand-horizon"></span>
         </div>
-    </nav>
-
-    <!-- Home Page Content -->
-    <div id="home-page" class="max-w-7xl mx-auto px-4 py-8">
-
-        <div class="flex flex-col lg:flex-row gap-8">
-
-            <!-- Left Sidebar -->
-            <div class="lg:w-1/4">
-                <div class="bg-white rounded-lg shadow-md p-6 mb-6 sticky top-4">
-
-                    <h2 class="text-xl font-bold text-gray-800 mb-6">Knowledge Base</h2>
-
-                    <!-- Search Input -->
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Search Parts</label>
-                        <input 
-                            type="text" 
-                            id="searchInput"
-                            placeholder="D340, Rat, Cabbage, BABY*, TAP..."
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                    </div>
-
-                    <!-- Filters -->
-                    <div class="space-y-4 mb-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Catalog</label>
-                            <select id="catalogFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                                <option value="">All Catalogs</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Section</label>
-                            <select id="categoryFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                                <option value="">All Sections</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Part Type</label>
-                            <select id="partTypeFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                                <option value="">All Part Types</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <button 
-                        id="searchBtn"
-                        class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                    >
-                        <i class="fas fa-search mr-2"></i>Search Parts
-                    </button>
-
-                    <!-- Cross Reference Link -->
-                    <div class="mt-6 pt-6 border-t border-gray-200">
-                        <a href="#" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                            <i class="fas fa-exchange-alt mr-2"></i>Cross Reference / Alternate Part
-                        </a>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- Main Results Column -->
-            <div class="lg:w-3/4">
-
-                <!-- Results Count -->
-                <div id="resultsCount" class="bg-white rounded-lg shadow-md p-4 mb-6 hidden">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-700">
-                            Found <span id="resultsNumber" class="font-bold">0</span> results
-                        </span>
-
-                        <div class="flex space-x-2">
-                            <button id="gridView" class="p-2 text-blue-600 border border-blue-600 rounded">
-                                <i class="fas fa-th"></i>
-                            </button>
-                            <button id="listView" class="p-2 text-gray-400 border border-gray-300 rounded">
-                                <i class="fas fa-list"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Loading Spinner -->
-                <div id="loadingSpinner" class="hidden text-center py-12">
-                    <i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></i>
-                    <p class="text-gray-600 mt-2">Searching parts database...</p>
-                </div>
-
-                <!-- Results Grid -->
-                <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                </div>
-
-                <!-- No Results -->
-                <div id="noResults" class="hidden text-center py-12">
-                    <i class="fas fa-search text-gray-400 text-4xl mb-4"></i>
-                    <h3 class="text-xl text-gray-600">No parts found</h3>
-                    <p class="text-gray-500">Try adjusting your search criteria or filters</p>
-                </div>
-
-            </div>
-
+        <div class="brand-text">
+          <span class="brand-title">Parts Intelligence</span>
+          <span class="brand-sub">Louis Industrial Group · Est. 1966</span>
         </div>
+      </div>
 
+      <div class="header-center">
+        <div class="larry-badge">
+          <i class="fas fa-robot"></i>
+          <span>Larry</span>
+          <span class="badge-tag">AI-Assisted</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div id="health-dot" class="health-indicator" title="System status">
+          <span class="dot dot--unknown"></span>
+          <span class="health-label">Connecting…</span>
+        </div>
+        <button class="btn btn--ghost btn--sm" id="uploadBtn" title="Upload PDF catalog">
+          <i class="fas fa-upload"></i> Upload
+        </button>
+      </div>
     </div>
+  </header>
 
-    <!-- Part Detail Page -->
-    <!-- Part Detail Page -->
-<div id="part-detail-page" class="hidden">
-    <div class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 py-6">
-            <!-- Back Button Added Here -->
-            <div class="flex items-center justify-between mb-4">
-                <button onclick="catalog.showHomePage()" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-medium">
-                    <i class="fas fa-arrow-left mr-2"></i>Back to Search
-                </button>
-            </div>
-            <div class="text-center">
-                <h1 id="part-number-header" class="text-4xl font-bold text-gray-900 mb-2"></h1>
-                <p id="part-description-header" class="text-gray-600 text-lg"></p>
-            </div>
+  <!-- ═══════════════════════════════ LAYOUT ═══════════════════════════════ -->
+  <div class="app-shell">
+
+    <!-- ─────────────── SIDEBAR ─────────────── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <label class="sidebar-label">Search Parts</label>
+        <div class="search-wrap">
+          <i class="fas fa-search search-icon"></i>
+          <input
+            type="text"
+            id="q"
+            class="search-input"
+            placeholder="Part number, description…"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button class="search-clear" id="clearSearch" title="Clear" aria-label="Clear search">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
-    </div>
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <div class="flex flex-col lg:flex-row gap-8">
+      </div>
 
-                <!-- Related Parts -->
-                <div class="lg:w-1/4">
-                    <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Related Parts</h3>
-                        <div id="related-parts-list" class="space-y-3"></div>
-                    </div>
-                </div>
-
-                <!-- Main Column -->
-                <div class="lg:w-2/4">
-
-                    <!-- Introduction -->
-                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">Introduction</h2>
-                        <div id="intro-content" class="text-gray-700 space-y-4"></div>
-                    </div>
-
-                    <!-- Use -->
-                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">Use</h2>
-                        <div id="use-content" class="text-gray-700"></div>
-                    </div>
-
-                    <!-- Specifications -->
-                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">Specifications</h2>
-                        <div id="specifications-content" class="text-gray-700"></div>
-                    </div>
-
-                    <!-- Cross Reference -->
-                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">Cross Reference</h2>
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead>
-                                    <tr class="bg-gray-50">
-                                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">OEM</th>
-                                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Part Number</th>
-                                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Alias</th>
-                                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Compatible Vehicles</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cross-reference-table"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Product Diagram -->
-                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">Product Diagram</h2>
-                        <div id="diagram-content" class="text-center text-gray-500"></div>
-                    </div>
-
-                    <!-- Installation Video -->
-                    <div class="bg-white rounded-lg shadow-md p-6">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">Installation Video</h2>
-                        <div id="video-content" class="text-center text-gray-500"></div>
-                    </div>
-
-                </div>
-
-                <!-- Product Info Sidebar -->
-                <div class="lg:w-1/4">
-                    <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
-
-                        <!-- Product Image -->
-                        <div id="product-image-container" class="mb-6 text-center">
-                            <div id="product-image-placeholder" class="image-placeholder w-full h-64 rounded-lg flex items-center justify-center mb-4 bg-gray-200">
-                                <i class="fas fa-image text-4xl text-gray-400"></i>
-                            </div>
-                            
-                            <img id="product-image" src="" alt="" class="w-full h-64 object-contain rounded-lg hidden">
-                            <div id="image-loading" class="hidden text-gray-500 text-sm mt-2">
-                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading image...
-                            </div>
-                        </div>
-
-                        <!-- Product Details -->
-                        <div class="space-y-4">
-
-                            <div>
-                                <h4 class="font-semibold text-gray-700 mb-2">Manufacturer</h4>
-                                <div id="manufacturer-info" class="text-gray-600 text-sm"></div>
-                            </div>
-
-                            <div>
-                                <h4 class="font-semibold text-gray-700 mb-2">Material</h4>
-                                <div id="material-info" class="text-gray-600 text-sm"></div>
-                            </div>
-
-                            <div>
-                                <h4 class="font-semibold text-gray-700 mb-2">General Info</h4>
-                                <div id="general-info" class="text-gray-600 text-sm space-y-1"></div>
-                            </div>
-
-                            <div class="space-y-3 pt-4 border-t border-gray-200">
-                                <a id="pdf-link" href="#" target="_blank" class="block bg-red-600 text-white text-center px-4 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium">
-                                    <i class="fas fa-file-pdf mr-2"></i>View in PDF
-                                </a>
-
-                                <a id="technical-guide-link" href="#" class="block bg-blue-600 text-white text-center px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                                    <i class="fas fa-book mr-2"></i>View in Technical Guide
-                                </a>
-
-                                <div class="text-center text-gray-600 text-sm mt-2">
-                                    Catalog Page: <span id="part-page-number" class="font-medium">-</span>
-                                </div>
-                            </div>
-
-                        </div>
-
-                    </div>
-                </div>
-
-            </div>
+      <div class="sidebar-section">
+        <label class="sidebar-label">Catalog</label>
+        <div class="select-wrap">
+          <select id="catalog_type" class="filter-select">
+            <option value="">All Catalogs</option>
+          </select>
+          <i class="fas fa-chevron-down select-arrow"></i>
         </div>
+      </div>
 
+      <div class="sidebar-section">
+        <label class="sidebar-label">Category</label>
+        <div class="select-wrap">
+          <select id="category" class="filter-select">
+            <option value="">All Categories</option>
+          </select>
+          <i class="fas fa-chevron-down select-arrow"></i>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="sidebar-label">Part Type</label>
+        <div class="select-wrap">
+          <select id="part_type" class="filter-select">
+            <option value="">All Types</option>
+          </select>
+          <i class="fas fa-chevron-down select-arrow"></i>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <button class="btn btn--outline btn--full" id="resetFilters">
+          <i class="fas fa-rotate-left"></i> Reset Filters
+        </button>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-stat" id="stat-parts">— parts</div>
+        <div class="sidebar-tagline">Human-reviewed · Confidence-labeled</div>
+      </div>
+    </aside>
+
+    <!-- ─────────────── MAIN CONTENT ─────────────── -->
+    <main class="main-content" id="mainContent">
+
+      <!-- Results toolbar -->
+      <div class="results-toolbar" id="resultsToolbar">
+        <div class="results-count" id="resultsCount">
+          <span id="countText">Loading…</span>
+        </div>
+        <div class="toolbar-actions">
+          <div class="view-toggle" role="group" aria-label="View mode">
+            <button class="view-btn active" id="viewGrid" title="Grid view" aria-label="Grid view">
+              <i class="fas fa-th-large"></i>
+            </button>
+            <button class="view-btn" id="viewList" title="List view" aria-label="List view">
+              <i class="fas fa-list"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div class="state-panel" id="stateLoading">
+        <div class="spinner"></div>
+        <p>Searching catalog…</p>
+      </div>
+
+      <!-- Empty state -->
+      <div class="state-panel hidden" id="stateEmpty">
+        <div class="state-icon"><i class="fas fa-magnifying-glass"></i></div>
+        <h3>No results found</h3>
+        <p>Try a different part number, description, or clear the filters.</p>
+        <button class="btn btn--primary" id="showAll">Show All Parts</button>
+      </div>
+
+      <!-- Error state -->
+      <div class="state-panel hidden" id="stateError">
+        <div class="state-icon state-icon--error"><i class="fas fa-triangle-exclamation"></i></div>
+        <h3 id="errorMsg">Something went wrong</h3>
+        <button class="btn btn--outline" id="retryBtn">
+          <i class="fas fa-rotate-right"></i> Retry
+        </button>
+      </div>
+
+      <!-- Results grid/list -->
+      <div id="results" class="results-grid hidden"></div>
+
+      <!-- Pagination -->
+      <div class="pagination hidden" id="pagination">
+        <button class="btn btn--ghost btn--sm" id="prevPage" disabled>
+          <i class="fas fa-chevron-left"></i> Prev
+        </button>
+        <span class="page-info" id="pageInfo">Page 1</span>
+        <button class="btn btn--ghost btn--sm" id="nextPage">
+          Next <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ═══════════════════════════════ DETAIL PANEL ═══════════════════════════════ -->
+  <div class="detail-overlay hidden" id="detailOverlay" aria-modal="true" role="dialog">
+    <div class="detail-panel" id="detailPanel">
+
+      <div class="detail-header">
+        <button class="detail-back" id="detailBack" aria-label="Close detail">
+          <i class="fas fa-arrow-left"></i> Back to results
+        </button>
+        <div class="detail-breadcrumb" id="detailBreadcrumb"></div>
+      </div>
+
+      <div class="detail-body">
+        <!-- Left sidebar -->
+        <aside class="detail-sidebar">
+          <div class="detail-image-card" id="detailImageCard">
+            <div class="image-placeholder" id="imagePlaceholder">
+              <i class="fas fa-image"></i>
+              <span>No image</span>
+            </div>
+            <img id="detailImage" class="hidden" alt="Part image">
+          </div>
+
+          <div class="detail-meta-card">
+            <div class="meta-row">
+              <span class="meta-key">Part #</span>
+              <span class="meta-val" id="dPartNumber">—</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Catalog</span>
+              <span class="meta-val" id="dCatalog">—</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Category</span>
+              <span class="meta-val" id="dCategory">—</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Type</span>
+              <span class="meta-val" id="dPartType">—</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Page</span>
+              <span class="meta-val" id="dPage">—</span>
+            </div>
+          </div>
+
+          <!-- Confidence label -->
+          <div class="confidence-card" id="confidenceCard">
+            <div class="confidence-label" id="confidenceLabel">
+              <i class="fas fa-circle-check"></i>
+              <span>Human Verified</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main detail content -->
+        <section class="detail-main">
+          <div class="detail-title-row">
+            <h1 class="detail-part-number" id="dTitlePartNumber">—</h1>
+            <span class="catalog-badge" id="dTitleCatalog">—</span>
+          </div>
+          <p class="detail-description" id="dDescription">—</p>
+
+          <!-- Applications -->
+          <div class="detail-section" id="sectionApplications">
+            <h2 class="section-heading"><i class="fas fa-truck"></i> Applications</h2>
+            <div class="applications-list" id="dApplications"></div>
+          </div>
+
+          <!-- Specifications -->
+          <div class="detail-section" id="sectionSpecs">
+            <h2 class="section-heading"><i class="fas fa-ruler-combined"></i> Specifications</h2>
+            <table class="specs-table" id="dSpecsTable">
+              <tbody id="dSpecsBody"></tbody>
+            </table>
+          </div>
+
+          <!-- Cross-references / OE Numbers -->
+          <div class="detail-section" id="sectionOE">
+            <h2 class="section-heading"><i class="fas fa-code-branch"></i> OE / Cross-References</h2>
+            <div class="oe-list" id="dOENumbers"></div>
+          </div>
+
+          <!-- Features -->
+          <div class="detail-section" id="sectionFeatures">
+            <h2 class="section-heading"><i class="fas fa-star"></i> Features</h2>
+            <div class="features-list" id="dFeatures"></div>
+          </div>
+
+          <!-- Technical Guides -->
+          <div class="detail-section" id="sectionGuides">
+            <h2 class="section-heading"><i class="fas fa-book-open"></i> Technical Guides</h2>
+            <div class="guides-list" id="dGuides"></div>
+          </div>
+        </section>
+      </div>
     </div>
+  </div>
 
-    <script src="/static/app.js"></script>
+  <!-- ═══════════════════════════════ TOAST ═══════════════════════════════ -->
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script src="/static/app.js"></script>
 </body>
 </html>
