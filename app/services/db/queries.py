@@ -14,10 +14,8 @@ class DatabaseManager:
 
     def _resolve_db_path(self) -> Path:
         """Resolve the database path from settings, creating directories if needed."""
-        # settings.DATA_DIR may be a relative path — resolve against project root
         data_dir = Path(settings.DATA_DIR)
         if not data_dir.is_absolute():
-            # Anchor relative DATA_DIR to the project root (two levels up from this file)
             project_root = Path(__file__).resolve().parent.parent.parent.parent
             data_dir = project_root / data_dir
         data_dir.mkdir(parents=True, exist_ok=True)
@@ -44,7 +42,64 @@ class DatabaseManager:
             conn.close()
 
     # ------------------------------------------------------------------
-    # Parts queries
+    # Parts write operations
+    # ------------------------------------------------------------------
+
+    def insert_part(self, part_data: dict) -> int:
+        """
+        Insert a single part into the database.
+        Uses INSERT OR IGNORE so duplicate (catalog_name, part_number, page)
+        rows are silently skipped.
+        Returns the new row id, or 0 if the row was ignored as a duplicate.
+        """
+        sql = """
+            INSERT OR IGNORE INTO parts
+                (catalog_name, catalog_type, part_type, part_number,
+                 description, category, page, image_path, page_text,
+                 pdf_path, machine_info, specifications, oe_numbers,
+                 applications, features)
+            VALUES
+                (:catalog_name, :catalog_type, :part_type, :part_number,
+                 :description, :category, :page, :image_path, :page_text,
+                 :pdf_path, :machine_info, :specifications, :oe_numbers,
+                 :applications, :features)
+        """
+        # Ensure every expected key exists so the query never raises KeyError
+        defaults = {
+            "catalog_name":  None,
+            "catalog_type":  None,
+            "part_type":     None,
+            "part_number":   None,
+            "description":   None,
+            "category":      None,
+            "page":          None,
+            "image_path":    None,
+            "page_text":     None,
+            "pdf_path":      None,
+            "machine_info":  None,
+            "specifications": None,
+            "oe_numbers":    None,
+            "applications":  None,
+            "features":      None,
+        }
+        row = {**defaults, **part_data}
+
+        with self.connection() as conn:
+            cur = conn.execute(sql, row)
+            conn.commit()
+            return cur.lastrowid or 0
+
+    def update_part_image(self, part_id: int, image_path: str) -> None:
+        """Update the image_path for a single part."""
+        with self.connection() as conn:
+            conn.execute(
+                "UPDATE parts SET image_path = ? WHERE id = ?",
+                (image_path, part_id),
+            )
+            conn.commit()
+
+    # ------------------------------------------------------------------
+    # Parts read queries
     # ------------------------------------------------------------------
 
     def search_parts(

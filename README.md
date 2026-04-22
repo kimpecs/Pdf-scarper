@@ -47,7 +47,7 @@ pip install -r requirements.txt
 # Download from: https://github.com/oschwartz10612/poppler-windows/releases/
 # Download the latest release (e.g., poppler-25.07.0-Linux-x86_64.zip)
 # Extract to C:\Users\YourUsername\Desktop\codes\poppler-25.07.0
-# The extract_pdf_toc_fixed.py already points to: C:\Users\kpecco\Desktop\codes\poppler-25.07.0\Library\bin
+# The extract_pdf_toc_fixed.py already points to: C:\Users\kpecco\Downloads\Release-25.12.0-0 (1).zip\poppler-25.12.0\Library\bin
 ```
 
 ### Direct Poppler Download:
